@@ -1,0 +1,85 @@
+package com.movieDekho.MovieDekho.Config.Utils;
+
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import javax.crypto.SecretKey;
+import java.security.Key;
+import java.util.Date;
+import java.util.stream.Collectors;
+
+@Component
+public class JwtUtils {
+
+    @Value("${jwt.secret}")
+    private String secret;
+
+    @Value("${jwt.expiration}")
+    private long expirationTime;
+    //Getting JWt from Header
+    public String getJwtFromHeader(HttpServletRequest request){
+        String header=request.getHeader("Authorization");
+        if(header!=null&&header.contains("Bearer ")){
+            return header.substring(7);
+        }
+        return null;
+    }
+
+    //Get Name From Token
+    public String getNameFromJwt(String token){
+        return Jwts.parser()
+                .verifyWith( (SecretKey) getSignInKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
+
+    }
+
+    public String generateToken(UserDetailsImplement detailsImplement){
+
+        String username= detailsImplement.getUsername();
+        String roles=detailsImplement.getAuthorities().stream()
+                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .collect(Collectors.joining(","));
+
+        return Jwts.builder().subject(username)
+                .claim("roles",roles)
+                .issuedAt(new Date())
+                .setExpiration(new Date(new Date().getTime()+expirationTime))
+                .compact();
+
+
+    }
+
+    private Key getSignInKey() {
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+    }
+    public boolean validateToken(String token){
+
+        try {
+            Jwts.parser()
+                    .verifyWith((SecretKey) getSignInKey())
+                    .build()
+                    .parseSignedClaims(token);
+
+            return true;
+        } catch (JwtException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException(e);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        return false;
+
+    }
+
+
+}

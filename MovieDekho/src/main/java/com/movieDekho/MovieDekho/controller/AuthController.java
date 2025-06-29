@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @AllArgsConstructor
 public class AuthController {
-
+    @Autowired
     private final UserService userService;
 
     @PostMapping("/api/save")
