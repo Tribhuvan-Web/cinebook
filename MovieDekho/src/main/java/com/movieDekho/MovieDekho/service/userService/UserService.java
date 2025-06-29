@@ -1,4 +1,4 @@
-package com.movieDekho.MovieDekho.service;
+package com.movieDekho.MovieDekho.service.userService;
 
 import com.movieDekho.MovieDekho.models.User;
 import com.movieDekho.MovieDekho.repository.UserRepository;

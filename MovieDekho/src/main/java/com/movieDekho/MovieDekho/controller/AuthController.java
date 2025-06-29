@@ -2,7 +2,7 @@ package com.movieDekho.MovieDekho.controller;
 
 import com.movieDekho.MovieDekho.dtos.RegisterUserDTO;
 import com.movieDekho.MovieDekho.models.User;
-import com.movieDekho.MovieDekho.service.UserService;
+import com.movieDekho.MovieDekho.service.userService.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

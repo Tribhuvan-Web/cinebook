@@ -1,4 +1,4 @@
-package com.movieDekho.MovieDekho.service;
+package com.movieDekho.MovieDekho.service.movieService;
 
 import com.movieDekho.MovieDekho.models.AvailableMovie;
 import com.movieDekho.MovieDekho.repository.MovieRepository;

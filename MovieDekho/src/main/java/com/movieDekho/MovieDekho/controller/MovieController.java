@@ -2,8 +2,7 @@ package com.movieDekho.MovieDekho.controller;
 
 import com.movieDekho.MovieDekho.dtos.AvailableMovieDTO;
 import com.movieDekho.MovieDekho.models.AvailableMovie;
-import com.movieDekho.MovieDekho.repository.MovieRepository;
-import com.movieDekho.MovieDekho.service.MovieService;
+import com.movieDekho.MovieDekho.service.movieService.MovieService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

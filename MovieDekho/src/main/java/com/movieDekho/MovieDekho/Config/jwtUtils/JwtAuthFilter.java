@@ -1,4 +1,4 @@
-package com.movieDekho.MovieDekho.Config.Utils;
+package com.movieDekho.MovieDekho.Config.jwtUtils;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
