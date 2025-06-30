@@ -8,6 +8,7 @@ import org.springframework.context.annotation.ComponentScan;
 public class MovieDekhoApplication {
 
 	public static void main(String[] args) {
+
 		SpringApplication.run(MovieDekhoApplication.class, args);
 	}
 
