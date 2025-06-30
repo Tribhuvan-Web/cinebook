@@ -35,6 +35,7 @@ public class AuthController {
             JwtAuthenticationResponse response = userService.loginUser(loginUserDTO);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
     }
