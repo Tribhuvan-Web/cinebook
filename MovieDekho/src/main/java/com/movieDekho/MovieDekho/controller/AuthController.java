@@ -26,8 +26,8 @@ public class AuthController {
         newUser.setRole("Role_User");
         newUser.setGender(user.getGender());
         newUser.setPhone(user.getPhone());
-        userService.saveUser(newUser);
-        return ResponseEntity.ok("User saved successfully");
+        User response=userService.saveUser(newUser);
+        return ResponseEntity.ok("Response :"+response);
     }
 
     @PostMapping("/api/login")
@@ -36,6 +36,7 @@ public class AuthController {
             JwtAuthenticationResponse response = userService.loginUser(loginUserDTO);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
     }
