@@ -26,8 +26,8 @@ public class AuthController {
         newUser.setRole("Role_User");
         newUser.setGender(user.getGender());
         newUser.setPhone(user.getPhone());
-        userService.saveUser(newUser);
-        return ResponseEntity.ok("User saved successfully");
+        String response=userService.saveUser(newUser);
+        return ResponseEntity.ok("Response :"+response);
     }
     @PostMapping("/api/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginUserDTO loginUserDTO) {
