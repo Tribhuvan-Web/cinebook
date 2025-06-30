@@ -1,6 +1,6 @@
 package com.movieDekho.MovieDekho.controller;
 
-import com.movieDekho.MovieDekho.Config.jwtUtils.JwtAuthenticationResponse;
+import com.movieDekho.MovieDekho.config.jwtUtils.JwtAuthenticationResponse;
 import com.movieDekho.MovieDekho.dtos.LoginUserDTO;
 import com.movieDekho.MovieDekho.dtos.RegisterUserDTO;
 import com.movieDekho.MovieDekho.models.User;
@@ -29,6 +29,7 @@ public class AuthController {
         userService.saveUser(newUser);
         return ResponseEntity.ok("User saved successfully");
     }
+
     @PostMapping("/api/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginUserDTO loginUserDTO) {
         try {
@@ -38,7 +39,5 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
     }
-
-
 
 }
