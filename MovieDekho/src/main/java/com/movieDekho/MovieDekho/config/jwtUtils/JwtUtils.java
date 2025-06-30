@@ -1,6 +1,6 @@
-package com.movieDekho.MovieDekho.Config.jwtUtils;
+package com.movieDekho.MovieDekho.config.jwtUtils;
 
-import com.movieDekho.MovieDekho.Config.userImplementation.UserDetailsImplement;
+import com.movieDekho.MovieDekho.config.userImplementation.UserDetailsImplement;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;

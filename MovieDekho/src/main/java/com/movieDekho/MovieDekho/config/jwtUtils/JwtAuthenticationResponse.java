@@ -1,4 +1,4 @@
-package com.movieDekho.MovieDekho.Config.jwtUtils;
+package com.movieDekho.MovieDekho.config.jwtUtils;
 
 import lombok.Data;
 

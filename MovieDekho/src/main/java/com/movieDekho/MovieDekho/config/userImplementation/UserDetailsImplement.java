@@ -1,4 +1,4 @@
-package com.movieDekho.MovieDekho.Config.userImplementation;
+package com.movieDekho.MovieDekho.config.userImplementation;
 
 import com.movieDekho.MovieDekho.models.User;
 import lombok.AllArgsConstructor;

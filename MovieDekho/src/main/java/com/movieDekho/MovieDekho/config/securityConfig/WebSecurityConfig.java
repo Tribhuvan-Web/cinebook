@@ -1,6 +1,6 @@
-package com.movieDekho.MovieDekho.Config.securityConfig;
+package com.movieDekho.MovieDekho.config.securityConfig;
 
-import com.movieDekho.MovieDekho.Config.jwtUtils.JwtAuthFilter;
+import com.movieDekho.MovieDekho.config.jwtUtils.JwtAuthFilter;
 import com.movieDekho.MovieDekho.service.userService.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
