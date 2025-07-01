@@ -64,7 +64,7 @@ public class BrevoEmailService {
                     + "<head><meta charset=\"UTF-8\"><title>OTP Code</title></head>"
                     + "<body style=\"font-family: Arial, sans-serif; margin: 20px;\">"
                     + "<div style=\"max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;\">"
-                    + "<h2 style=\"color: #333; text-align: center;\">Your Login OTP</h2>"
+                    + "<h2 style=\"color: #333; text-align: center;\">Your Login OTP is </h2>"
                     + "<div style=\"background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 4px; margin: 20px 0;\">"
                     + "<h3 style=\"color: #007bff; font-size: 24px; margin: 0;\">" + otpCode + "</h3>"
                     + "</div>"
