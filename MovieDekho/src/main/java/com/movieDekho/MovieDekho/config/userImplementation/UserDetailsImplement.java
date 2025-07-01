@@ -28,7 +28,6 @@ public class UserDetailsImplement implements UserDetails {
 
     private Collection<? extends GrantedAuthority> authorities;
 
-    // Static factory method to convert User -> UserDetailsImplement
     public static UserDetailsImplement build(User user) {
         GrantedAuthority authority = new SimpleGrantedAuthority(user.getRole());
         return new UserDetailsImplement(

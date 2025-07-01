@@ -1,37 +1,31 @@
-HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-../.env
-mvnw.cmd
-.gitignore
+# Ignore application configuration files
+/src/main/resources/application.properties
+/src/main/resources/application*.yml
+/src/main/resources/application*.yaml
 
+# Ignore sensitive data files
+*.keystore
+*.jks
+*.p12
+*.cert
+*.key
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# Ignore IDE files
+.idea/
 *.iml
 *.ipr
- .idea/compiler.xml
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+*.iws
 
-### VS Code ###
-.vscode/
+# Ignore build directories
+target/
+build/
+out/
+bin/
+
+# Ignore log files
+*.log
+logs/
+
+# Ignore system files
+.DS_Store
+Thumbs.db

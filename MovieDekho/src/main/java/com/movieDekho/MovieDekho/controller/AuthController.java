@@ -1,10 +1,7 @@
 package com.movieDekho.MovieDekho.controller;
 
 import com.movieDekho.MovieDekho.config.jwtUtils.JwtAuthenticationResponse;
-import com.movieDekho.MovieDekho.dtos.LoginInitiationDto;
-import com.movieDekho.MovieDekho.dtos.LoginUserDTO;
-import com.movieDekho.MovieDekho.dtos.OTPVerificationDTO;
-import com.movieDekho.MovieDekho.dtos.RegisterUserDTO;
+import com.movieDekho.MovieDekho.dtos.*;
 import com.movieDekho.MovieDekho.exception.UserDetailsAlreadyExist;
 import com.movieDekho.MovieDekho.models.User;
 import com.movieDekho.MovieDekho.service.otpservice.BrevoEmailService;
@@ -12,8 +9,10 @@ import com.movieDekho.MovieDekho.service.otpservice.OtpService;
 import com.movieDekho.MovieDekho.service.userService.UserService;
 import lombok.AllArgsConstructor;
 
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api/auth")
@@ -54,29 +53,103 @@ public class AuthController {
 
     @PostMapping("/initiate-login")
     public ResponseEntity<?> initiateLogin(@RequestBody LoginInitiationDto request) {
-        if (!userService.userExists(request.getEmail())) {
+        try {
+            String targetEmail;
+            if (request.hasPhoneNumber()) {
+                targetEmail = userService.findEmailByPhone(request.getPhoneNumber());
+            } else if (request.hasEmail()) {
+                targetEmail = request.getEmail();
+            } else {
+                return ResponseEntity.badRequest().body("Must provide email or phone number");
+            }
+
+            if (!userService.userExists(targetEmail)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            }
+
+            String otp = otpService.generateOtp(targetEmail);
+            emailService.sendOtpEmail(targetEmail, otp);
+
+            return ResponseEntity.ok("OTP sent successfully");
+        } catch (UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
+    }
 
-        String otp = otpService.generateOtp(request.getEmail());
-        emailService.sendOtpEmail(request.getEmail(), otp);
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody LoginInitiationDto request) {
+        try {
+            String targetEmail;
 
-        return ResponseEntity.ok("OTP sent successfully");
+            if (request.hasPhoneNumber()) {
+                targetEmail = userService.findEmailByPhone(request.getPhoneNumber());
+            } else if (request.hasEmail()) {
+                targetEmail = request.getEmail();
+            } else {
+                return ResponseEntity.badRequest().body("Must provide email or phone number");
+            }
+
+            if (!userService.userExists(targetEmail)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            }
+
+            String otp = otpService.generateOtp(targetEmail);
+            emailService.sendPasswordResetEmail(targetEmail, otp);
+
+            return ResponseEntity.ok("Password reset OTP sent successfully");
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<?> verifyOtp(@RequestBody OTPVerificationDTO request) {
-        // 1. Validate OTP
-        if (!otpService.validateOtp(request.getEmail(), request.getOtp())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid OTP");
-        }
-
-        // 2. Authenticate and generate JWT
+    public ResponseEntity<?> verifyOtp(@RequestBody OtpVerificationDto request) {
         try {
-            JwtAuthenticationResponse response = userService.loginWithOtp(request.getEmail());
+            String targetEmail;
+
+            if (request.hasPhoneNumber()) {
+                targetEmail = userService.findEmailByPhone(request.getPhoneNumber());
+            } else if (request.hasEmail()) {
+                targetEmail = request.getEmail();
+            } else {
+                return ResponseEntity.badRequest().body("Must provide email or phone number");
+            }
+
+            if (!otpService.validateOtp(targetEmail, request.getOtp())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid OTP");
+            }
+
+            JwtAuthenticationResponse response = userService.loginWithEmail(targetEmail);
             return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed");
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody PasswordResetDto request) {
+        try {
+            String targetEmail;
+
+            if (request.hasPhoneNumber()) {
+                targetEmail = userService.findEmailByPhone(request.getPhoneNumber());
+            } else if (request.hasEmail()) {
+                targetEmail = request.getEmail();
+            } else {
+                return ResponseEntity.badRequest().body("Must provide email or phone number");
+            }
+
+            if (!otpService.validateOtp(targetEmail, request.getOtp())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid OTP");
+            }
+
+            userService.resetPassword(targetEmail, request.getNewPassword());
+
+            return ResponseEntity.ok("Password reset successfully");
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        } catch (InvalidDataAccessApiUsageException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid password format");
         }
     }
 }

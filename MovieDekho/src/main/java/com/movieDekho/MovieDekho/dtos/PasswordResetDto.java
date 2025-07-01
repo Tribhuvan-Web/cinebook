@@ -1,13 +1,13 @@
 package com.movieDekho.MovieDekho.dtos;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-@AllArgsConstructor
-public class LoginInitiationDto {
+public class PasswordResetDto {
     private String email;
     private String phoneNumber;
+    private String otp;
+    private String newPassword;
 
     public boolean hasEmail() {
         return email != null && !email.isEmpty();

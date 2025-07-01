@@ -5,9 +5,10 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class LoginInitiationDto {
+public class OtpVerificationDto {
     private String email;
     private String phoneNumber;
+    private String otp;
 
     public boolean hasEmail() {
         return email != null && !email.isEmpty();

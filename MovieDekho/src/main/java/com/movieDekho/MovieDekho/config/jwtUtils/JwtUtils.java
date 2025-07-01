@@ -23,13 +23,11 @@ public class JwtUtils {
     @Value("${jwt.expiration}")
     private long expirationTime;
 
-    // Getting JWt from Header
     public String getJwtFromHeader(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         return (bearerToken != null && bearerToken.startsWith("Bearer")) ? bearerToken.substring(7) : null;
     }
 
-    // Get Name From Token
     public String getNameFromJwt(String token) {
         return Jwts.parser()
                 .verifyWith((SecretKey) key())
@@ -66,9 +64,7 @@ public class JwtUtils {
                     .getPayload().getSubject();
 
             return true;
-        } catch (JwtException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalArgumentException e) {
+        } catch (JwtException | IllegalArgumentException e) {
             throw new RuntimeException(e);
         } catch (Exception e) {
             e.printStackTrace();
