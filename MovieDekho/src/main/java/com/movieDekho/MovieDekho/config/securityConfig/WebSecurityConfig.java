@@ -60,7 +60,7 @@ public class WebSecurityConfig {
                                 .requestMatchers("/save/movie").hasRole("ADMIN")
                                 .anyRequest().authenticated()
                 );
-        //Run Custom Filter Before inbuild
+
         security.authenticationProvider(daoAuthenticationProvider());
         security.addFilterBefore(getJwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
 
