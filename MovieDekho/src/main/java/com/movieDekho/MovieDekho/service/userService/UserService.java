@@ -11,25 +11,25 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Service
 @AllArgsConstructor
 public class UserService {
+    
     private PasswordEncoder passwordEncoder;
     private UserRepository userRepository;
     private AuthenticationManager authenticationManager;
     private JwtUtils jwtUtils;
+    
     public User saveUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
-    public JwtAuthenticationResponse loginUser(LoginUserDTO user){
-
-
+    public JwtAuthenticationResponse loginUser(@RequestBody LoginUserDTO user){
         Authentication authentication=authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getUsername(),user.getPassword())
         );

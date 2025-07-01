@@ -55,26 +55,26 @@ public class UserDetailsImplement implements UserDetails {
 
     @Override
     public String getUsername() {
-        return username; // Fixed: It was returning password earlier
+        return username; 
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // Set to true unless you want to expire accounts
+        return true; 
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // Set to true unless locking is needed
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // Set to true unless you expire credentials
+        return true; 
     }
 
     @Override
     public boolean isEnabled() {
-        return true; // Set to true unless user is disabled
+        return true; 
     }
 }

@@ -6,6 +6,8 @@ import com.movieDekho.MovieDekho.dtos.RegisterUserDTO;
 import com.movieDekho.MovieDekho.models.User;
 import com.movieDekho.MovieDekho.service.userService.UserService;
 import lombok.AllArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class AuthController {
 
+    @Autowired
     private final UserService userService;
 
     @PostMapping("/api/save")
@@ -26,8 +29,7 @@ public class AuthController {
         newUser.setRole("Role_User");
         newUser.setGender(user.getGender());
         newUser.setPhone(user.getPhone());
-        User response=userService.saveUser(newUser);
-        return ResponseEntity.ok("Response :"+response);
+        return ResponseEntity.ok("Registered successfully");
     }
 
     @PostMapping("/api/login")
