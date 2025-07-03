@@ -126,9 +126,9 @@ public class UserService {
             String jwt = jwtUtils.generateToken(userDetailsImplement);
             return new JwtAuthenticationResponse(jwt);
         } catch (AuthenticationException e) {
+            System.out.println(e);
             throw new BadCredentialsException("Invalid mobile/email or password");
         }
-
     }
 
     @Transactional
