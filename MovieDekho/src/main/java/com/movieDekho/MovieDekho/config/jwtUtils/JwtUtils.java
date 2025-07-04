@@ -1,12 +1,15 @@
 package com.movieDekho.MovieDekho.config.jwtUtils;
 
 import com.movieDekho.MovieDekho.config.userImplementation.UserDetailsImplement;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -29,39 +32,39 @@ public class JwtUtils {
     }
 
     public String getNameFromJwt(String token) {
-        return Jwts.parser()
+        Claims claims =  Jwts.parser()
                 .verifyWith((SecretKey) key())
                 .build()
                 .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
+                .getBody();
 
+        return claims.get("name", String.class);
     }
 
     public String generateToken(UserDetailsImplement userDetails) {
-
         String email = userDetails.getEmail();
+        String name = userDetails.getUsername();
         String roles = userDetails.getAuthorities().stream()
-                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
         return Jwts.builder().subject(email)
                 .claim("roles", roles)
+                .claim("name",name)
                 .issuedAt(new Date())
                 .setExpiration(new Date(new Date().getTime() + expirationTime))
+                .signWith(key())
                 .compact();
 
     }
 
     public boolean validateToken(String token) {
         
-
         try {
             Jwts.parser()
                     .verifyWith((SecretKey) key())
                     .build()
-                    .parseSignedClaims(token)
-                    .getPayload().getSubject();
+                    .parseSignedClaims(token);
 
             return true;
         } catch (JwtException | IllegalArgumentException e) {

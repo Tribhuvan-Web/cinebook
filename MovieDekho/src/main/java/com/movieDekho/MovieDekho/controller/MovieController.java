@@ -1,34 +1,25 @@
 package com.movieDekho.MovieDekho.controller;
 
-import com.movieDekho.MovieDekho.dtos.AvailableMovieDTO;
 import com.movieDekho.MovieDekho.models.AvailableMovie;
 import com.movieDekho.MovieDekho.service.movieService.MovieService;
+import com.movieDekho.MovieDekho.service.userService.UserService;
 import lombok.AllArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
-@RequestMapping
+@RequestMapping("/movies")
 @RestController
 @AllArgsConstructor
 public class MovieController {
 
     private MovieService movieService;
+    private UserService userService;
 
-    @PostMapping("/save/movie")
-    public ResponseEntity<?> saveMovie(@RequestBody AvailableMovieDTO availableMovieDTO) {
-        AvailableMovie availableMovie = new AvailableMovie();
-        availableMovie.setTitle(availableMovieDTO.getTitle());
-        availableMovie.setDescription(availableMovieDTO.getDescription());
-        availableMovie.setDuration(availableMovieDTO.getDuration());
-        availableMovie.setThumbnail(availableMovieDTO.getThumbnail());
-        availableMovie.setReleaseDate(LocalDate.from(availableMovieDTO.getReleaseDate()));
-        movieService.saveMovie(availableMovie);
-
-        return ResponseEntity.ok("Movie saved successfully");
+     @GetMapping("/recent")
+    public List<AvailableMovie> getRecentMovies() {
+        LocalDate oneYearAgo = LocalDate.now().minusYears(1);
+        return movieService.getRecentMovies();
     }
 }

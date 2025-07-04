@@ -3,7 +3,7 @@ package com.movieDekho.MovieDekho.service.userService;
 import com.movieDekho.MovieDekho.config.jwtUtils.JwtAuthenticationResponse;
 import com.movieDekho.MovieDekho.config.jwtUtils.JwtUtils;
 import com.movieDekho.MovieDekho.config.userImplementation.UserDetailsImplement;
-import com.movieDekho.MovieDekho.dtos.LoginUserDTO;
+import com.movieDekho.MovieDekho.dtos.user.LoginUserDTO;
 import com.movieDekho.MovieDekho.exception.UserDetailsAlreadyExist;
 import com.movieDekho.MovieDekho.models.User;
 import com.movieDekho.MovieDekho.repository.UserRepository;
@@ -131,6 +131,11 @@ public class UserService {
         }
     }
 
+    public User findByUsername(String name) {
+        return userRepository.findByUsername(name).orElseThrow(
+                () -> new UsernameNotFoundException("Username " + name + " not found"));
+    }
+
     @Transactional
     public void resetPassword(String email, String newPassword) {
         User user = userRepository.findByEmail(email)
@@ -176,5 +181,6 @@ public class UserService {
     public boolean userExists(String email) {
         return userRepository.existsByEmail(email);
     }
+
 
 }

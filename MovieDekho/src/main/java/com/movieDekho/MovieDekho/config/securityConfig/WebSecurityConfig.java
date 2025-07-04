@@ -27,7 +27,6 @@ public class WebSecurityConfig {
 
     private UserDetailsServiceImpl detailsService;
 
-
     @Bean
     public JwtAuthFilter getJwtAuthFilter() {
         return new JwtAuthFilter();
@@ -58,7 +57,6 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(
                         auth -> auth
                                 .requestMatchers("/api/**").permitAll()
-                                .requestMatchers("/save/movie").hasRole("ADMIN")
                                 .anyRequest().authenticated()
                 );
 

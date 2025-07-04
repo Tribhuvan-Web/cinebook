@@ -17,18 +17,16 @@ import java.io.IOException;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
-
     @Autowired
     private JwtUtils jwtUtils;
-
     @Autowired
     private UserDetailsService userDetailsService;
 
     @SuppressWarnings("null")
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain)
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
             throws ServletException, IOException {
 
         try {

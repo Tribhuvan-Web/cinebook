@@ -1,6 +1,5 @@
-package com.movieDekho.MovieDekho.dtos;
+package com.movieDekho.MovieDekho.dtos.user;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data

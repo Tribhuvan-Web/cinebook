@@ -1,4 +1,4 @@
-package com.movieDekho.MovieDekho.dtos;
+package com.movieDekho.MovieDekho.dtos.user;
 
 import lombok.Data;
 

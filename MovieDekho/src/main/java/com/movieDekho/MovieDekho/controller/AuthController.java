@@ -1,7 +1,8 @@
 package com.movieDekho.MovieDekho.controller;
 
 import com.movieDekho.MovieDekho.config.jwtUtils.JwtAuthenticationResponse;
-import com.movieDekho.MovieDekho.dtos.*;
+import com.movieDekho.MovieDekho.config.jwtUtils.JwtUtils;
+import com.movieDekho.MovieDekho.dtos.user.*;
 import com.movieDekho.MovieDekho.exception.UserDetailsAlreadyExist;
 import com.movieDekho.MovieDekho.models.User;
 import com.movieDekho.MovieDekho.service.otpservice.BrevoEmailService;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final UserService userService;
+    private final JwtUtils jwtUtils;
     private final OtpService otpService;
     private final BrevoEmailService emailService;
 
@@ -152,5 +154,19 @@ public class AuthController {
         } catch (InvalidDataAccessApiUsageException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid password format");
         }
+    }
+
+    @GetMapping("/username")
+    public ResponseEntity<?> getName(@RequestHeader("Authorization") String authHeader) {
+        try {
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                authHeader = authHeader.substring(7);
+                String username = jwtUtils.getNameFromJwt(authHeader);
+                return ResponseEntity.ok(username);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
     }
 }

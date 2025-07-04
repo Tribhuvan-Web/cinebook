@@ -1,13 +1,14 @@
-package com.movieDekho.MovieDekho.dtos;
+package com.movieDekho.MovieDekho.dtos.user;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-public class PasswordResetDto {
+@AllArgsConstructor
+public class OtpVerificationDto {
     private String email;
     private String phoneNumber;
     private String otp;
-    private String newPassword;
 
     public boolean hasEmail() {
         return email != null && !email.isEmpty();
