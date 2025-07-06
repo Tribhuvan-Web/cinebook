@@ -4,7 +4,6 @@ import com.movieDekho.MovieDekho.models.AvailableMovie;
 import com.movieDekho.MovieDekho.repository.MovieRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,7 +20,7 @@ public class MovieService {
         return movieRepository.findByReleaseDateAfter(oneYearAgo);
     }
 
-    public Optional<AvailableMovie> getMovieById(Long id) {
-        return movieRepository.findById(id);
+    public AvailableMovie getMovieById(Long id) {
+        return movieRepository.findById(id).orElse(null);
     }
 }

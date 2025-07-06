@@ -24,7 +24,7 @@ public class Booking {
     private String userEmail;
     private double totalAmount;
     private LocalDateTime bookingTime;
-    private BookingStatus status; // CONFIRMED, CANCELLED
+    private BookingStatus status;
 
     public enum BookingStatus {
         CONFIRMED, CANCELLED

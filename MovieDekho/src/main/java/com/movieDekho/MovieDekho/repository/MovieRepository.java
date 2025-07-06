@@ -6,8 +6,12 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MovieRepository extends JpaRepository<AvailableMovie, Long> {
     List<AvailableMovie> findByReleaseDateAfter(LocalDate releaseDateAfter);
+
+    @Override
+    Optional<AvailableMovie> findById(Long aLong);
 }

@@ -15,8 +15,6 @@ public class DataInitializer {
     @Bean
     CommandLineRunner initDatabase(MovieRepository repository) {
         return args -> {
-            repository.deleteAll();
-
             LocalDate startOfRange = LocalDate.now();
             LocalDate endOfRange = startOfRange.plusDays(5);
 
@@ -25,7 +23,7 @@ public class DataInitializer {
                     new AvailableMovie(
                             1L,
                             "F1: The Movie",
-                            LocalDate.of(2025, 7, 3),  // Corrected date format
+                            LocalDate.of(2025, 7, 3),
                             "2h 55m",
                             "Racing thriller directed by Reyansh Singh",
                             "U/A 16+",
