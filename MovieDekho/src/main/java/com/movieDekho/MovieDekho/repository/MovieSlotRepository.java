@@ -3,7 +3,6 @@ package com.movieDekho.MovieDekho.repository;
 import com.movieDekho.MovieDekho.models.MovieSlot;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
