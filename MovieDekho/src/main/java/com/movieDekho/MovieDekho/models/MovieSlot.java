@@ -1,5 +1,6 @@
 package com.movieDekho.MovieDekho.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,6 +26,7 @@ public class MovieSlot {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "movie_id", nullable = false)
     @ToString.Exclude
+    @JsonIgnore
     private AvailableMovie movie;
 
     private LocalDate showDate;
