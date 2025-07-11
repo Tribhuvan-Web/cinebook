@@ -19,7 +19,6 @@ public class MovieSlotResponseDTO {
     public static MovieSlotResponseDTO fromMovieSlot(MovieSlot slot) {
         MovieSlotResponseDTO dto = new MovieSlotResponseDTO();
         dto.setSlotId(slot.getSlotId());
-        dto.setShowDate(slot.getShowDate());
         dto.setStartTime(slot.getStartTime());
         dto.setEndTime(slot.getEndTime());
         dto.setTheaterName(slot.getTheaterName());

@@ -9,6 +9,7 @@ import com.movieDekho.MovieDekho.models.User;
 import com.movieDekho.MovieDekho.repository.UserRepository;
 import com.movieDekho.MovieDekho.service.otpservice.BrevoEmailService;
 import jakarta.transaction.Transactional;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -33,18 +34,35 @@ public class UserService {
     private JwtUtils jwtUtils;
     private UserDetailsServiceImpl userDetailsService;
 
+    @Transactional
     public void registerUser(User user) {
+        // Check for existing username
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            throw new UserDetailsAlreadyExist("Username already in use");
+        }
+
+        // Check for existing email
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new UserDetailsAlreadyExist("Email already in use");
         }
 
+        // Check for existing phone
         if (userRepository.findByPhone(user.getPhone()).isPresent()) {
-            throw new UserDetailsAlreadyExist("Number already in use");
+            throw new UserDetailsAlreadyExist("Phone number already in use");
         }
 
+        // Validate password strength
+        if (user.getPassword().length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters long");
+        }
+
+        // Encode password and set default role
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        sendWelcomeEmail(user);
-        userRepository.save(user);
+        user.setRole("ROLE_USER");
+
+        // Save user and send welcome email
+        User savedUser = userRepository.save(user);
+        sendWelcomeEmail(savedUser);
     }
 
     public void sendWelcomeEmail(User user) {
@@ -131,9 +149,20 @@ public class UserService {
         }
     }
 
-    public User findByUsername(String name) {
-        return userRepository.findByUsername(name).orElseThrow(
-                () -> new UsernameNotFoundException("Username " + name + " not found"));
+    public User findByUsername(String username) {
+        // First try to find by email
+        Optional<User> user = userRepository.findByEmail(username);
+        if (user.isPresent()) {
+            return user.get();
+        }
+        
+        // If not found by email, try phone
+        user = userRepository.findByPhone(username);
+        if (user.isPresent()) {
+            return user.get();
+        }
+        
+        throw new UsernameNotFoundException("User not found with email/phone: " + username);
     }
 
     @Transactional

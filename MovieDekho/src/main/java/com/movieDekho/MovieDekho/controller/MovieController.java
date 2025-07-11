@@ -2,7 +2,6 @@ package com.movieDekho.MovieDekho.controller;
 
 import com.movieDekho.MovieDekho.dtos.movie.MovieResponseDTO;
 import com.movieDekho.MovieDekho.exception.ResourceNotFoundException;
-import com.movieDekho.MovieDekho.models.AvailableMovie;
 import com.movieDekho.MovieDekho.service.movieService.MovieService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;

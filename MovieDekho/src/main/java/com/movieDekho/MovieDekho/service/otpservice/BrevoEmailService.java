@@ -66,10 +66,10 @@ public class BrevoEmailService {
                     .to(Collections.singletonList(to))
                     .subject("Your Login OTP Code")
                     .htmlContent(htmlContent)
-                    .textContent(textContent)  // Add plain text version
-                    .tags(Collections.singletonList("otp-email"));  // Add tags for tracking
+                    .textContent(textContent) // Add plain text version
+                    .tags(Collections.singletonList("otp-email")); // Add tags for tracking
 
-            CreateSmtpEmail response = apiInstance.sendTransacEmail(sendSmtpEmail);
+            apiInstance.sendTransacEmail(sendSmtpEmail);
         } catch (Exception e) {
             logger.error("Failed to send OTP email to {}: {}", recipientEmail, e.getMessage(), e);
 
@@ -98,7 +98,7 @@ public class BrevoEmailService {
             TransactionalEmailsApi apiInstance = new TransactionalEmailsApi();
 
             SendSmtpEmailSender sender = new SendSmtpEmailSender()
-                    .email(senderEmail)  // This MUST be verified in your Brevo account
+                    .email(senderEmail) // This MUST be verified in your Brevo account
                     .name(senderName);
 
             SendSmtpEmailTo to = new SendSmtpEmailTo()
@@ -128,8 +128,8 @@ public class BrevoEmailService {
                     .to(Collections.singletonList(to))
                     .subject("Password Reset Request")
                     .htmlContent(htmlContent)
-                    .textContent(textContent)  // Add plain text version
-                    .tags(Collections.singletonList("password-reset-email"));  // Add tags for tracking
+                    .textContent(textContent) // Add plain text version
+                    .tags(Collections.singletonList("password-reset-email")); // Add tags for tracking
 
             CreateSmtpEmail response = apiInstance.sendTransacEmail(sendSmtpEmail);
             logger.info("Password reset email sent successfully! Message ID: {}", response.getMessageId());
