@@ -13,6 +13,7 @@ import java.util.Optional;
 @Repository
 public interface MovieRepository extends JpaRepository<AvailableMovie, Long> {
     List<AvailableMovie> findByReleaseDateAfter(LocalDate releaseDateAfter);
+    List<AvailableMovie> findByTitleContainingIgnoreCase(String title);
 
     @NonNull
     @Override

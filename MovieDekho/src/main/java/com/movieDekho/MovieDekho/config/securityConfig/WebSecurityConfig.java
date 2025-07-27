@@ -56,13 +56,33 @@ public class WebSecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         auth -> auth
-                                .requestMatchers("/api/**").permitAll()
+                                // Public authentication endpoints
+                                .requestMatchers("/api/auth/**").permitAll()
+                                .requestMatchers("/api/test/public").permitAll()
+                                
+                                // Admin specific endpoints (must be before general movie endpoints)
+                                .requestMatchers("/movies/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/api/seats/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/api/movie-slots/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/api/test/admin").hasRole("ADMIN")
+                                
+                                // Public movie endpoints
+                                .requestMatchers("/movies/**").permitAll()
+                                
+                                // User specific endpoints
+                                .requestMatchers("/api/user/**").hasRole("USER")
+                                .requestMatchers("/api/seats/slot/**").hasAnyRole("USER", "ADMIN")
+                                .requestMatchers("/api/seats/{seatId}").hasAnyRole("USER", "ADMIN")
+                                .requestMatchers("/api/seats/{seatId}/availability").hasAnyRole("USER", "ADMIN")
+                                .requestMatchers("/api/test/user").hasAnyRole("USER", "ADMIN")
+                                
+                                // Any other requests need authentication
                                 .anyRequest().authenticated()
                 );
 
         security.authenticationProvider(daoAuthenticationProvider());
         security.addFilterBefore(getJwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
-
 
         return security.build();
     }

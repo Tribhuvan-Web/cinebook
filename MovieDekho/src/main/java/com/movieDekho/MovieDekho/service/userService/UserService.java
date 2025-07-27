@@ -36,31 +36,25 @@ public class UserService {
 
     @Transactional
     public void registerUser(User user) {
-        // Check for existing username
+
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             throw new UserDetailsAlreadyExist("Username already in use");
         }
 
-        // Check for existing email
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new UserDetailsAlreadyExist("Email already in use");
         }
 
-        // Check for existing phone
         if (userRepository.findByPhone(user.getPhone()).isPresent()) {
             throw new UserDetailsAlreadyExist("Phone number already in use");
         }
 
-        // Validate password strength
         if (user.getPassword().length() < 6) {
             throw new IllegalArgumentException("Password must be at least 6 characters long");
         }
 
-        // Encode password and set default role
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole("ROLE_USER");
 
-        // Save user and send welcome email
         User savedUser = userRepository.save(user);
         sendWelcomeEmail(savedUser);
     }
@@ -150,13 +144,11 @@ public class UserService {
     }
 
     public User findByUsername(String username) {
-        // First try to find by email
         Optional<User> user = userRepository.findByEmail(username);
         if (user.isPresent()) {
             return user.get();
         }
         
-        // If not found by email, try phone
         user = userRepository.findByPhone(username);
         if (user.isPresent()) {
             return user.get();
@@ -202,7 +194,6 @@ public class UserService {
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Generate JWT
         String jwt = jwtUtils.generateToken((UserDetailsImplement) userDetails);
         return new JwtAuthenticationResponse(jwt);
     }

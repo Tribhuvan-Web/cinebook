@@ -11,27 +11,15 @@ import java.util.List;
 import java.time.LocalDate;
 
 @Entity
+@Table(name = "available_movie")
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class AvailableMovie {
 
-    public AvailableMovie(Long id, String title, LocalDate releaseDate, String duration,
-            String description, String certification, String thumbnail,
-            LocalDate startDate, LocalDate endDate) {
-        this.id = id;
-        this.title = title;
-        this.releaseDate = releaseDate;
-        this.duration = duration;
-        this.description = description;
-        this.certification = certification;
-        this.thumbnail = thumbnail;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.slots = new ArrayList<>();
-    }
-
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
     private String title;
@@ -43,6 +31,8 @@ public class AvailableMovie {
 
     private LocalDate startDate;
     private LocalDate endDate;
+    private String trailer;
+    private String genre;
 
     @OneToMany(mappedBy = "movie", fetch = FetchType.LAZY)
     private List<MovieSlot> slots = new ArrayList<>();

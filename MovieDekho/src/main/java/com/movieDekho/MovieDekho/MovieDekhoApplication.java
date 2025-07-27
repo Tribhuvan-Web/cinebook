@@ -7,8 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class MovieDekhoApplication {
 
 	public static void main(String[] args) {
-
 		SpringApplication.run(MovieDekhoApplication.class, args);
 	}
-
 }

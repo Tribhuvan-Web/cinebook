@@ -33,11 +33,28 @@ public class AuthController {
             newUser.setUsername(user.getUsername());
             newUser.setPassword(user.getPassword());
             newUser.setEmail(user.getEmail());
-            newUser.setRole("Role_User");
+            newUser.setRole("ROLE_USER");
             newUser.setGender(user.getGender());
             newUser.setPhone(user.getPhone());
             userService.registerUser(newUser);
             return ResponseEntity.ok("User registered successfully");
+        } catch (UserDetailsAlreadyExist e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email/phone already exist");
+        }
+    }
+
+    @PostMapping("/register-admin")
+    public ResponseEntity<?> saveAdmin(@RequestBody RegisterUserDTO user) {
+        try {
+            User newUser = new User();
+            newUser.setUsername(user.getUsername());
+            newUser.setPassword(user.getPassword());
+            newUser.setEmail(user.getEmail());
+            newUser.setRole("ROLE_ADMIN");
+            newUser.setGender(user.getGender());
+            newUser.setPhone(user.getPhone());
+            userService.registerUser(newUser);
+            return ResponseEntity.ok("Admin registered successfully");
         } catch (UserDetailsAlreadyExist e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Email/phone already exist");
         }
