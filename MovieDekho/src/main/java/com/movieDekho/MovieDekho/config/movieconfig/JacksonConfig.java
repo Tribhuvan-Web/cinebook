@@ -12,15 +12,10 @@ public class JacksonConfig {
     @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
-        
-        // Register Hibernate5 module
         Hibernate5JakartaModule hibernate5Module = new Hibernate5JakartaModule();
         hibernate5Module.configure(Hibernate5JakartaModule.Feature.FORCE_LAZY_LOADING, false);
         mapper.registerModule(hibernate5Module);
-        
-        // Register Java 8 Date/Time module
         mapper.registerModule(new JavaTimeModule());
-        
         return mapper;
     }
 }

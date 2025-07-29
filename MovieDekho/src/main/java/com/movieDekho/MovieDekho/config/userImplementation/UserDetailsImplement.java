@@ -1,21 +1,21 @@
 package com.movieDekho.MovieDekho.config.userImplementation;
 
 import com.movieDekho.MovieDekho.models.User;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serial;
 import java.util.Collection;
 import java.util.Collections;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class UserDetailsImplement implements UserDetails {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private Long id;
@@ -25,8 +25,23 @@ public class UserDetailsImplement implements UserDetails {
     private String phone;
     private String gender;
     private String role;
+    private Boolean isApproved;
 
     private Collection<? extends GrantedAuthority> authorities;
+
+    public UserDetailsImplement(Long id, String username, String password, String email, 
+                                String phone, String gender, String role, Boolean isApproved,
+                                Collection<? extends GrantedAuthority> authorities) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.phone = phone;
+        this.gender = gender;
+        this.role = role;
+        this.isApproved = isApproved;
+        this.authorities = authorities;
+    }
 
     public static UserDetailsImplement build(User user) {
         GrantedAuthority authority = new SimpleGrantedAuthority(user.getRole());
@@ -38,6 +53,7 @@ public class UserDetailsImplement implements UserDetails {
                 user.getPhone(),
                 user.getGender(),
                 user.getRole(),
+                user.getIsApproved(),
                 Collections.singletonList(authority)
         );
     }
@@ -74,6 +90,18 @@ public class UserDetailsImplement implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true; 
+        // Pending admins should not be able to access admin functions
+        if ("PENDING_ADMIN".equals(role) || "REJECTED_ADMIN".equals(role)) {
+            return false;
+        }
+        // Regular users are always enabled
+        if ("ROLE_USER".equals(role)) {
+            return true;
+        }
+        // Admins must be approved
+        if ("ROLE_ADMIN".equals(role)) {
+            return isApproved != null && isApproved;
+        }
+        return true;
     }
 }

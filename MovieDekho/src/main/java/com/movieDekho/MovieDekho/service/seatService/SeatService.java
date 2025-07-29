@@ -22,15 +22,9 @@ public class SeatService {
     private final SeatRepository seatRepository;
     private final MovieSlotRepository movieSlotRepository;
 
-    // ============ ADMIN SERVICES ============
-
-    /**
-     * Create seats for a movie slot
-     */
     public List<SeatResponse> createSeats(Long slotId, List<SeatRequest> seatRequests) {
         MovieSlot slot = getMovieSlotById(slotId);
 
-        // Check for duplicate seat numbers in the request
         List<String> requestSeatNumbers = seatRequests.stream()
                 .map(SeatRequest::getSeatNumber)
                 .toList();
@@ -43,14 +37,12 @@ public class SeatService {
             throw new IllegalArgumentException("Seat numbers already exist: " + duplicates);
         }
 
-        // Create seat entities
         List<Seat> seats = seatRequests.stream()
                 .map(request -> createSeatEntity(slot, request))
                 .collect(Collectors.toList());
 
         List<Seat> savedSeats = seatRepository.saveAll(seats);
 
-        // Update slot totals
         updateSlotTotals(slot, seats.size(), seats.size());
 
         return savedSeats.stream()
@@ -58,9 +50,6 @@ public class SeatService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get all seats for a slot
-     */
     public List<SeatResponse> getAllSeatsForSlot(Long slotId) {
         MovieSlot slot = getMovieSlotById(slotId);
         List<Seat> seats = seatRepository.findBySlot(slot);
@@ -69,13 +58,9 @@ public class SeatService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Update seat details
-     */
     public SeatResponse updateSeat(Long seatId, SeatUpdateRequest request) {
         Seat seat = getSeatById(seatId);
 
-        // Update fields if provided
         if (request.getSeatNumber() != null) {
             validateUniquesSeatNumber(seat, request.getSeatNumber());
             seat.setSeatNumber(request.getSeatNumber());
@@ -91,24 +76,17 @@ public class SeatService {
         return convertToSeatResponse(updatedSeat);
     }
 
-    /**
-     * Delete a seat
-     */
     public void deleteSeat(Long seatId) {
         Seat seat = getSeatById(seatId);
         MovieSlot slot = seat.getSlot();
 
         seatRepository.delete(seat);
 
-        // Update slot totals
         int totalSeatsChange = -1;
         int availableSeatsChange = seat.isBooked() ? 0 : -1;
         updateSlotTotals(slot, totalSeatsChange, availableSeatsChange);
     }
 
-    /**
-     * Update seat booking status
-     */
     public SeatResponse updateSeatBookingStatus(Long seatId, boolean isBooked) {
         Seat seat = getSeatById(seatId);
         boolean previousBookingStatus = seat.isBooked();
@@ -122,17 +100,13 @@ public class SeatService {
         return convertToSeatResponse(seat);
     }
 
-    /**
-     * Bulk create seats with pattern
-     */
-    public List<SeatResponse> bulkCreateSeats(Long slotId, String rowStart, String rowEnd, 
-                                            int seatsPerRow, double price) {
+    public List<SeatResponse> bulkCreateSeats(Long slotId, String rowStart, String rowEnd,
+                                              int seatsPerRow, double price) {
         MovieSlot slot = getMovieSlotById(slotId);
         List<Seat> seats = generateSeats(slot, rowStart, rowEnd, seatsPerRow, price);
 
         List<Seat> savedSeats = seatRepository.saveAll(seats);
 
-        // Update slot totals
         updateSlotTotals(slot, seats.size(), seats.size());
 
         return savedSeats.stream()
@@ -140,11 +114,6 @@ public class SeatService {
                 .collect(Collectors.toList());
     }
 
-    // ============ USER SERVICES ============
-
-    /**
-     * Get available seats for a slot
-     */
     public List<SeatResponse> getAvailableSeats(Long slotId) {
         MovieSlot slot = getMovieSlotById(slotId);
         List<Seat> availableSeats = seatRepository.findBySlotAndIsBooked(slot, false);
@@ -153,9 +122,6 @@ public class SeatService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get booked seats for a slot
-     */
     public List<SeatResponse> getBookedSeats(Long slotId) {
         MovieSlot slot = getMovieSlotById(slotId);
         List<Seat> bookedSeats = seatRepository.findBySlotAndIsBooked(slot, true);
@@ -164,24 +130,15 @@ public class SeatService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get all seats with status for a slot
-     */
     public List<SeatResponse> getAllSeatsWithStatus(Long slotId) {
         return getAllSeatsForSlot(slotId);
     }
 
-    /**
-     * Get seat by ID
-     */
     public SeatResponse getSeatResponseById(Long seatId) {
         Seat seat = getSeatById(seatId);
         return convertToSeatResponse(seat);
     }
 
-    /**
-     * Check seat availability
-     */
     public SeatAvailabilityResponse checkSeatAvailability(Long seatId) {
         Seat seat = getSeatById(seatId);
         return new SeatAvailabilityResponse(
@@ -192,9 +149,6 @@ public class SeatService {
         );
     }
 
-    /**
-     * Get seats by price range
-     */
     public List<SeatResponse> getSeatsByPriceRange(Long slotId, double minPrice, double maxPrice) {
         MovieSlot slot = getMovieSlotById(slotId);
         List<Seat> seats = seatRepository.findBySlotAndPriceBetween(slot, minPrice, maxPrice);
@@ -203,27 +157,16 @@ public class SeatService {
                 .collect(Collectors.toList());
     }
 
-    // ============ UTILITY METHODS ============
-
-    /**
-     * Get movie slot by ID with validation
-     */
     private MovieSlot getMovieSlotById(Long slotId) {
         return movieSlotRepository.findById(slotId)
                 .orElseThrow(() -> new ResourceNotFoundException("Movie slot not found with ID: " + slotId));
     }
 
-    /**
-     * Get seat by ID with validation
-     */
     private Seat getSeatById(Long seatId) {
         return seatRepository.findById(seatId)
                 .orElseThrow(() -> new ResourceNotFoundException("Seat not found with ID: " + seatId));
     }
 
-    /**
-     * Create seat entity from request
-     */
     private Seat createSeatEntity(MovieSlot slot, SeatRequest request) {
         Seat seat = new Seat();
         seat.setSlot(slot);
@@ -233,9 +176,6 @@ public class SeatService {
         return seat;
     }
 
-    /**
-     * Validate unique seat number within slot
-     */
     private void validateUniquesSeatNumber(Seat currentSeat, String newSeatNumber) {
         Optional<Seat> existingSeat = seatRepository.findBySlotAndSeatNumber(
                 currentSeat.getSlot(), newSeatNumber);
@@ -244,9 +184,6 @@ public class SeatService {
         }
     }
 
-    /**
-     * Update seat booking status and handle slot available seats
-     */
     private void updateSeatBookingStatus(Seat seat, boolean newBookingStatus) {
         boolean previousBookingStatus = seat.isBooked();
         if (previousBookingStatus != newBookingStatus) {
@@ -255,9 +192,6 @@ public class SeatService {
         }
     }
 
-    /**
-     * Update available seats count in slot
-     */
     private void updateAvailableSeatsCount(MovieSlot slot, boolean previousStatus, boolean newStatus) {
         if (previousStatus && !newStatus) {
             // Seat was booked, now available
@@ -269,18 +203,12 @@ public class SeatService {
         movieSlotRepository.save(slot);
     }
 
-    /**
-     * Update slot totals (total seats and available seats)
-     */
     private void updateSlotTotals(MovieSlot slot, int totalSeatsChange, int availableSeatsChange) {
         slot.setTotalSeats(slot.getTotalSeats() + totalSeatsChange);
         slot.setAvailableSeats(slot.getAvailableSeats() + availableSeatsChange);
         movieSlotRepository.save(slot);
     }
 
-    /**
-     * Convert Seat entity to SeatResponse DTO
-     */
     private SeatResponse convertToSeatResponse(Seat seat) {
         SeatResponse response = new SeatResponse();
         response.setSeatId(seat.getSeatId());
@@ -291,11 +219,8 @@ public class SeatService {
         return response;
     }
 
-    /**
-     * Generate seats with pattern (A1-A10, B1-B10, etc.)
-     */
-    private List<Seat> generateSeats(MovieSlot slot, String rowStart, String rowEnd, 
-                                   int seatsPerRow, double price) {
+    private List<Seat> generateSeats(MovieSlot slot, String rowStart, String rowEnd,
+                                     int seatsPerRow, double price) {
         List<Seat> seats = new java.util.ArrayList<>();
         char startChar = rowStart.charAt(0);
         char endChar = rowEnd.charAt(0);
@@ -328,14 +253,36 @@ public class SeatService {
             this.price = price;
         }
 
-        // Getters and setters
-        public Long getSeatId() { return seatId; }
-        public void setSeatId(Long seatId) { this.seatId = seatId; }
-        public String getSeatNumber() { return seatNumber; }
-        public void setSeatNumber(String seatNumber) { this.seatNumber = seatNumber; }
-        public boolean isAvailable() { return available; }
-        public void setAvailable(boolean available) { this.available = available; }
-        public double getPrice() { return price; }
-        public void setPrice(double price) { this.price = price; }
+        public Long getSeatId() {
+            return seatId;
+        }
+
+        public void setSeatId(Long seatId) {
+            this.seatId = seatId;
+        }
+
+        public String getSeatNumber() {
+            return seatNumber;
+        }
+
+        public void setSeatNumber(String seatNumber) {
+            this.seatNumber = seatNumber;
+        }
+
+        public boolean isAvailable() {
+            return available;
+        }
+
+        public void setAvailable(boolean available) {
+            this.available = available;
+        }
+
+        public double getPrice() {
+            return price;
+        }
+
+        public void setPrice(double price) {
+            this.price = price;
+        }
     }
 }

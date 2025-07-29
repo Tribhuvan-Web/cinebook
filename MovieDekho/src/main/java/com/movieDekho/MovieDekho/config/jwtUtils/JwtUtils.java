@@ -31,34 +31,46 @@ public class JwtUtils {
     }
 
     public String getNameFromJwt(String token) {
-        Claims claims =  Jwts.parser()
+        Claims claims = Jwts.parser()
                 .verifyWith((SecretKey) key())
                 .build()
                 .parseSignedClaims(token)
                 .getBody();
 
-        return claims.get("name", String.class);
+        return claims.getSubject();
+    }
+
+    public String getDisplayNameFromJwt(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith((SecretKey) key())
+                .build()
+                .parseSignedClaims(token)
+                .getBody();
+
+        String displayName = claims.get("displayName", String.class);
+        return displayName != null ? displayName : claims.get("name", String.class);
     }
 
     public String generateToken(UserDetailsImplement userDetails) {
         String email = userDetails.getEmail();
-        String name = userDetails.getUsername();
+        String displayName = userDetails.getUsername();
         String roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
-        return Jwts.builder().subject(email)
+        return Jwts.builder()
+                .subject(email)
                 .claim("roles", roles)
-                .claim("name",name)
+                .claim("displayName", displayName)
+                .claim("email", email)
                 .issuedAt(new Date())
                 .setExpiration(new Date(new Date().getTime() + expirationTime))
                 .signWith(key())
                 .compact();
-
     }
 
     public boolean validateToken(String token) {
-        
+
         try {
             Jwts.parser()
                     .verifyWith((SecretKey) key())
@@ -78,5 +90,4 @@ public class JwtUtils {
     private Key key() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
     }
-
 }

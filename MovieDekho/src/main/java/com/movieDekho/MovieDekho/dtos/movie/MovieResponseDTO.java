@@ -12,7 +12,9 @@ public class MovieResponseDTO {
     private String title;
     private LocalDate releaseDate;
     private String duration;
+    private String genre;
     private String description;
+    private String trailer;
     private String certification;
     private String thumbnail;
     private LocalDate startDate;
@@ -25,8 +27,10 @@ public class MovieResponseDTO {
         dto.setTitle(movie.getTitle());
         dto.setReleaseDate(movie.getReleaseDate());
         dto.setDuration(movie.getDuration());
+        dto.setGenre(movie.getGenre());
         dto.setDescription(movie.getDescription());
         dto.setCertification(movie.getCertification());
+        dto.setTrailer(movie.getTrailer());
         dto.setThumbnail(movie.getThumbnail());
         dto.setStartDate(movie.getStartDate());
         dto.setEndDate(movie.getEndDate());

@@ -33,7 +33,7 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
@@ -43,10 +43,10 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public DaoAuthenticationProvider daoAuthenticationProvider(){
-        DaoAuthenticationProvider provider=new DaoAuthenticationProvider();
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(detailsService);
-        provider.setPasswordEncoder(passwordEncoder() );
+        provider.setPasswordEncoder(passwordEncoder());
         return provider;
     }
 
@@ -58,28 +58,40 @@ public class WebSecurityConfig {
                         auth -> auth
                                 // Public authentication endpoints
                                 .requestMatchers("/api/auth/**").permitAll()
-                                .requestMatchers("/api/test/public").permitAll()
                                 
-                                // Admin specific endpoints (must be before general movie endpoints)
+                                // Super Admin endpoints - public access via email links
+                                .requestMatchers("/api/super-admin/**").permitAll()
+                                
+                                // Admin endpoints - must be defined before general patterns
                                 .requestMatchers("/movies/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/api/seats/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/api/movie-slots/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/api/test/admin").hasRole("ADMIN")
-                                
+                                .requestMatchers("/api/slots/admin/**").hasRole("ADMIN")
+
                                 // Public movie endpoints
-                                .requestMatchers("/movies/**").permitAll()
+                                .requestMatchers("/movies/recent").permitAll()
+                                .requestMatchers("/movies/{id}").permitAll()
+                                .requestMatchers("/movies/search").permitAll()
+                                .requestMatchers("/movies/filter/**").permitAll()
+
+                                // Public movie slot endpoints
+                                .requestMatchers("/api/slots/movie/**").permitAll()
+                                .requestMatchers("/api/slots/{slotId}").permitAll()
+                                .requestMatchers("/api/slots/available").permitAll()
+                                .requestMatchers("/api/slots/theater/**").permitAll()
+                                .requestMatchers("/api/slots/date-range").permitAll()
+                                .requestMatchers("/api/slots/search").permitAll()
+
+                                // User endpoints
+                                .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
                                 
-                                // User specific endpoints
-                                .requestMatchers("/api/user/**").hasRole("USER")
+                                // Seat endpoints for authenticated users
                                 .requestMatchers("/api/seats/slot/**").hasAnyRole("USER", "ADMIN")
                                 .requestMatchers("/api/seats/{seatId}").hasAnyRole("USER", "ADMIN")
                                 .requestMatchers("/api/seats/{seatId}/availability").hasAnyRole("USER", "ADMIN")
-                                .requestMatchers("/api/test/user").hasAnyRole("USER", "ADMIN")
-                                
-                                // Any other requests need authentication
-                                .anyRequest().authenticated()
-                );
+
+                                // All other requests require authentication
+                                .anyRequest().authenticated());
 
         security.authenticationProvider(daoAuthenticationProvider());
         security.addFilterBefore(getJwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);

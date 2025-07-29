@@ -16,7 +16,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByPhone(String phone);
 
-    @Query("select  u from  User  u where  u.email = :identifier or u.phone = :identifier  or u.username = :identifier")
+    void deleteById(Long id);
+
+    @Query("select u from User u where u.email = :identifier or u.phone = :identifier")
     Optional<User> findByEmailOrPhone(@Param("identifier") String identifier);
 
     boolean existsByEmail(String email);
@@ -24,4 +26,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
     
     List<User> findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(String username, String email);
+    
+    // Methods for admin approval system
+    List<User> findByRoleAndIsApproved(String role, Boolean isApproved);
+    
+    List<User> findByRoleIn(List<String> roles);
+    
+    List<User> findByRole(String role);
 }

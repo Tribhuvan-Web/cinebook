@@ -50,13 +50,24 @@ public class AuthController {
             newUser.setUsername(user.getUsername());
             newUser.setPassword(user.getPassword());
             newUser.setEmail(user.getEmail());
-            newUser.setRole("ROLE_ADMIN");
+            newUser.setRole("PENDING_ADMIN");
             newUser.setGender(user.getGender());
             newUser.setPhone(user.getPhone());
-            userService.registerUser(newUser);
-            return ResponseEntity.ok("Admin registered successfully");
+            newUser.setIsApproved(false);
+            newUser.setRequestedAt(java.time.LocalDateTime.now());
+
+            User savedUser = userService.registerUser(newUser);
+
+            emailService.sendAdminRegistrationNotification(
+                    savedUser.getUsername(),
+                    savedUser.getEmail(),
+                    savedUser.getPhone(),
+                    savedUser.getId()
+            );
+
+            return ResponseEntity.ok("Admin registration request submitted. Please wait for approval from the super admin.");
         } catch (UserDetailsAlreadyExist e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email/phone already exist");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("You are not authorized for admin");
         }
     }
 
@@ -66,7 +77,6 @@ public class AuthController {
             JwtAuthenticationResponse response = userService.loginUser(loginUserDTO);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.out.println(e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
     }
@@ -178,7 +188,7 @@ public class AuthController {
         try {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 authHeader = authHeader.substring(7);
-                String username = jwtUtils.getNameFromJwt(authHeader);
+                String username = jwtUtils.getDisplayNameFromJwt(authHeader);
                 return ResponseEntity.ok(username);
             }
         } catch (Exception e) {

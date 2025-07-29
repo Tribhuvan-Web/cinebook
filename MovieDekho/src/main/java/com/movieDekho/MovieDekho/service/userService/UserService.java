@@ -35,11 +35,7 @@ public class UserService {
     private UserDetailsServiceImpl userDetailsService;
 
     @Transactional
-    public void registerUser(User user) {
-
-        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            throw new UserDetailsAlreadyExist("Username already in use");
-        }
+    public User registerUser(User user) {
 
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new UserDetailsAlreadyExist("Email already in use");
@@ -56,7 +52,14 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         User savedUser = userRepository.save(user);
-        sendWelcomeEmail(savedUser);
+        
+        // Only send welcome email for regular users and approved admins
+        if ("ROLE_USER".equals(user.getRole()) || 
+            ("ROLE_ADMIN".equals(user.getRole()) && user.getIsApproved())) {
+            sendWelcomeEmail(savedUser);
+        }
+        
+        return savedUser;
     }
 
     public void sendWelcomeEmail(User user) {
@@ -128,8 +131,14 @@ public class UserService {
         }
     }
 
+    /**
+     * Login user using email/phone and password
+     * Note: Despite the field name "username" in LoginUserDTO, this method accepts email or phone
+     * for authentication, not the display username which is non-unique
+     */
     public JwtAuthenticationResponse loginUser(@RequestBody LoginUserDTO user) {
         try {
+            // The "username" field in DTO actually contains email or phone for authentication
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
             );
@@ -139,22 +148,26 @@ public class UserService {
             return new JwtAuthenticationResponse(jwt);
         } catch (AuthenticationException e) {
             System.out.println(e);
-            throw new BadCredentialsException("Invalid mobile/email or password");
+            throw new BadCredentialsException("Invalid email/phone or password");
         }
     }
 
-    public User findByUsername(String username) {
-        Optional<User> user = userRepository.findByEmail(username);
+    /**
+     * Find user by email or phone (not by display username)
+     * This method is used for authentication purposes
+     */
+    public User findByUsername(String emailOrPhone) {
+        Optional<User> user = userRepository.findByEmail(emailOrPhone);
         if (user.isPresent()) {
             return user.get();
         }
         
-        user = userRepository.findByPhone(username);
+        user = userRepository.findByPhone(emailOrPhone);
         if (user.isPresent()) {
             return user.get();
         }
         
-        throw new UsernameNotFoundException("User not found with email/phone: " + username);
+        throw new UsernameNotFoundException("User not found with email/phone: " + emailOrPhone);
     }
 
     @Transactional

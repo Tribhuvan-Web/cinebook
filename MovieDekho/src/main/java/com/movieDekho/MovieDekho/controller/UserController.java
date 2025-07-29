@@ -5,7 +5,6 @@ import com.movieDekho.MovieDekho.dtos.movie.MovieResponseDTO;
 import com.movieDekho.MovieDekho.dtos.user.UserResponseDTO;
 import com.movieDekho.MovieDekho.models.User;
 import com.movieDekho.MovieDekho.repository.UserRepository;
-import com.movieDekho.MovieDekho.service.movieService.MovieService;
 import com.movieDekho.MovieDekho.util.UserMapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,38 +23,16 @@ import java.util.Optional;
 @PreAuthorize("hasRole('USER')")
 public class UserController {
 
-    private final MovieService movieService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
-
-    @GetMapping("/dashboard")
-    public ResponseEntity<?> getUserDashboard(@RequestHeader("Authorization") String authHeader) {
-        try {
-            String username = extractUsernameFromToken(authHeader);
-            Optional<User> userOpt = userRepository.findByUsername(username);
-            
-            if (userOpt.isPresent()) {
-                User user = userOpt.get();
-                UserDashboardResponse response = new UserDashboardResponse();
-                response.setUser(UserMapper.toUserResponseDTO(user));
-                response.setRecentMovies(movieService.getRecentMovies());
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error fetching dashboard: " + e.getMessage());
-        }
-    }
 
     @GetMapping("/profile")
     public ResponseEntity<?> getUserProfile(@RequestHeader("Authorization") String authHeader) {
         try {
             String username = extractUsernameFromToken(authHeader);
-            Optional<User> userOpt = userRepository.findByUsername(username);
-            
+            Optional<User> userOpt = userRepository.findByEmailOrPhone(username);
+
             if (userOpt.isPresent()) {
                 UserResponseDTO response = UserMapper.toUserResponseDTO(userOpt.get());
                 return ResponseEntity.ok(response);
@@ -69,35 +46,23 @@ public class UserController {
     }
 
     @PutMapping("/profile")
-    public ResponseEntity<?> updateProfile(@RequestHeader("Authorization") String authHeader, 
-                                         @RequestBody UserProfileUpdateRequest request) {
+    public ResponseEntity<?> updateProfile(@RequestHeader("Authorization") String authHeader,
+                                           @RequestBody UserProfileUpdateRequest request) {
         try {
             String username = extractUsernameFromToken(authHeader);
-            Optional<User> userOpt = userRepository.findByUsername(username);
-            
+            Optional<User> userOpt = userRepository.findByEmailOrPhone(username);
+
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
-                
-                if (request.getEmail() != null && !request.getEmail().isEmpty()) {
-                    Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
-                    if (existingUser.isPresent() && !existingUser.get().getId().equals(user.getId())) {
-                        return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already in use");
-                    }
-                    user.setEmail(request.getEmail());
+
+                if (request.getUsername() != null && !user.getUsername().isEmpty()) {
+                    user.setUsername(request.getUsername());
                 }
-                
-                if (request.getPhone() != null && !request.getPhone().isEmpty()) {
-                    Optional<User> existingUser = userRepository.findByPhone(request.getPhone());
-                    if (existingUser.isPresent() && !existingUser.get().getId().equals(user.getId())) {
-                        return ResponseEntity.status(HttpStatus.CONFLICT).body("Phone already in use");
-                    }
-                    user.setPhone(request.getPhone());
-                }
-                
+
                 if (request.getGender() != null && !request.getGender().isEmpty()) {
                     user.setGender(request.getGender());
                 }
-                
+
                 userRepository.save(user);
                 return ResponseEntity.ok("Profile updated successfully");
             } else {
@@ -111,27 +76,26 @@ public class UserController {
 
     @PutMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestHeader("Authorization") String authHeader,
-                                          @RequestBody ChangePasswordRequest request) {
+                                            @RequestBody ChangePasswordRequest request) {
         try {
             String username = extractUsernameFromToken(authHeader);
-            Optional<User> userOpt = userRepository.findByUsername(username);
-            
+            Optional<User> userOpt = userRepository.findByEmailOrPhone(username);
+
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
-                
-                // Verify current password
+
                 if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Current password is incorrect");
                 }
-                
+
                 if (request.getNewPassword().length() < 6) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body("New password must be at least 6 characters long");
                 }
-                
+
                 user.setPassword(passwordEncoder.encode(request.getNewPassword()));
                 userRepository.save(user);
-                
+
                 return ResponseEntity.ok("Password changed successfully");
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
@@ -155,7 +119,6 @@ public class UserController {
     @GetMapping("/bookings")
     public ResponseEntity<?> getBookingHistory(@RequestHeader("Authorization") String authHeader) {
         try {
-            // This is a placeholder - you can implement booking history functionality later
             return ResponseEntity.ok("Booking history feature coming soon");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -163,13 +126,22 @@ public class UserController {
         }
     }
 
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteUser(@RequestHeader("Authorization") String authHeader) {
+        Optional<User> userOpt = userRepository.findByEmailOrPhone(extractUsernameFromToken(authHeader));
+        userRepository.deleteById(userOpt.get().getId());
+        return ResponseEntity.ok("User deleted successfully");
+    }
+
     private String extractUsernameFromToken(String authHeader) {
         String token = authHeader.substring(7);
         return jwtUtils.getNameFromJwt(token);
     }
 
+
     @Data
     public static class UserProfileUpdateRequest {
+        private String username;
         private String email;
         private String phone;
         private String gender;
