@@ -51,4 +51,33 @@ public class AdminApprovalService {
         logger.info("Admin approved: {} by Super Admin", user.getUsername());
         return "Admin approved successfully! " + user.getUsername() + " has been notified.";
     }
+
+    public String getUserEmailById(Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        return userOpt.map(User::getEmail).orElse(null);
+    }
+
+    public String getUsernameById(Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        return userOpt.map(User::getUsername).orElse(null);
+    }
+
+    public void deleteUser(Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("User not found with ID: " + userId);
+        }
+
+        User user = userOpt.get();
+        
+        // Log the deletion for audit purposes
+        logger.info("Deleting user: {} (ID: {}) - Admin request declined by Super Admin", 
+                   user.getUsername(), userId);
+        
+        // Delete the user
+        userRepository.deleteById(userId);
+        
+        logger.info("User successfully deleted: {} (ID: {})", user.getUsername(), userId);
+    }
 }

@@ -180,8 +180,9 @@ public class BrevoEmailService {
 
     public void sendAdminRegistrationNotification(String adminUsername, String adminEmail, String adminPhone, Long userId) {
         try {
-            String subject = "New Admin Registration Request - MovieDekho";
+            String subject = "New Admin Registration Request - CineBook";
             String approvalLink = "http://localhost:8080/api/super-admin/approve/" + userId;
+            String declineLink = "http://localhost:8080/api/super-admin/decline/" + userId;
             String dateTime = java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a"));
 
             String htmlContent = "<!DOCTYPE html>"
@@ -204,8 +205,11 @@ public class BrevoEmailService {
                     + "  .detail-value { flex: 1; color: #1a202c; font-weight: 400; }"
                     + "  .approval-section { background-color: #e6f7ff; border-left: 4px solid #1890ff; padding: 25px; text-align: center; margin: 30px 0; border-radius: 0 10px 10px 0; }"
                     + "  .approval-title { color: #004085; font-size: 20px; margin-top: 0; margin-bottom: 20px; }"
-                    + "  .btn-approve { display: inline-block; padding: 14px 35px; background: linear-gradient(to right, #28a745, #218838); color: white !important; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(40,167,69,0.3); transition: all 0.3s; }"
+                    + "  .btn-container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }"
+                    + "  .btn-approve { display: inline-block; padding: 14px 35px; background: linear-gradient(to right, #28a745, #218838); color: white !important; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(40,167,69,0.3); transition: all 0.3s; margin: 5px; }"
                     + "  .btn-approve:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(40,167,69,0.4); }"
+                    + "  .btn-decline { display: inline-block; padding: 14px 35px; background: linear-gradient(to right, #dc3545, #c82333); color: white !important; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(220,53,69,0.3); transition: all 0.3s; margin: 5px; }"
+                    + "  .btn-decline:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(220,53,69,0.4); }"
                     + "  .security-note { background-color: #fff8f6; border-left: 4px solid #ff4d4f; padding: 20px; border-radius: 0 8px 8px 0; margin: 30px 0; }"
                     + "  .security-title { color: #721c24; font-size: 18px; margin-top: 0; margin-bottom: 10px; }"
                     + "  .footer { text-align: center; padding: 20px; color: #718096; font-size: 12px; border-top: 1px solid #e2e8f0; }"
@@ -215,38 +219,35 @@ public class BrevoEmailService {
                     + "<body>"
                     + "<div class=\"container\">"
                     + "  <div class=\"header\">"
-                    + "    <div class=\"logo\"><span class=\"logo-icon\">🎬</span> MovieDekho Admin Portal</div>"
+                    + "    <div class=\"logo\"><span class=\"logo-icon\">🎬</span> CineBook Admin Portal</div>"
                     + "  </div>"
                     + "  <div class=\"content\">"
-                    + "    <div class=\"card\">"
-                    + "      <h2 class=\"card-title\">New Admin Registration Request</h2>"
-                    + "      <p>A new user has requested admin privileges and requires your approval.</p>"
-                    + "    </div>"
                     + "    <div>"
                     + "      <h3 class=\"card-title\">Registration Details</h3>"
-                    + "      <div class=\"detail-row\"><div class=\"detail-label\">User ID:</div><div class=\"detail-value\">" + userId + "</div></div>"
-                    + "      <div class=\"detail-row\"><div class=\"detail-label\">Username:</div><div class=\"detail-value\">" + adminUsername + "</div></div>"
-                    + "      <div class=\"detail-row\"><div class=\"detail-label\">Email:</div><div class=\"detail-value\">" + adminEmail + "</div></div>"
-                    + "      <div class=\"detail-row\"><div class=\"detail-label\">Phone:</div><div class=\"detail-value\">" + adminPhone + "</div></div>"
-                    + "      <div class=\"detail-row\"><div class=\"detail-label\">Request Time:</div><div class=\"detail-value\">" + dateTime + "</div></div>"
+                    + "      <div class=\"detail-row\"><div class=\"detail-label\">ADMIN NAME : </div><div class=\"detail-value\">" + adminUsername + "</div></div>"
+                    + "      <div class=\"detail-row\"><div class=\"detail-label\">Email : </div><div class=\"detail-value\">" + adminEmail + "</div></div>"
+                    + "      <div class=\"detail-row\"><div class=\"detail-label\">Phone : </div><div class=\"detail-value\">" + adminPhone + "</div></div>"
+                    + "      <div class=\"detail-row\"><div class=\"detail-label\">Request Time : </div><div class=\"detail-value\">" + dateTime + "</div></div>"
                     + "    </div>"
                     + "    <div class=\"approval-section\">"
-                    + "      <h3 class=\"approval-title\">Approve Admin Access</h3>"
-                    + "      <a href=\"" + approvalLink + "\" class=\"btn-approve\">APPROVE ADMIN</a>"
-                    + "      <div style=\"margin-top: 25px;\">"
-                    + "        <p>Or manually copy this approval link:</p>"
-                    + "        <div class=\"link-code\">" + approvalLink + "</div>"
+                    + "      <h3 class=\"approval-title\">Review Admin Request</h3>"
+                    + "      <div class=\"btn-container\">"
+                    + "        <a href=\"" + approvalLink + "\" class=\"btn-approve\">✅ APPROVE ADMIN</a>"
+                    + "        <a href=\"" + declineLink + "\" class=\"btn-decline\">❌ DECLINE REQUEST</a>"
                     + "      </div>"
+                    + "      <p style=\"margin-top: 20px; color: #666; font-size: 14px;\">Choose wisely - this action will grant or deny administrative privileges</p>"
                     + "    </div>"
                     + "    <div class=\"security-note\">"
                     + "      <h3 class=\"security-title\">Security Notice</h3>"
-                    + "      <p>This user <strong>will not</strong> have administrative privileges until you approve this request. Only approve requests from trusted individuals.</p>"
-                    + "      <p>If you don't recognize this request, please investigate immediately.</p>"
+                    + "      <p><strong>APPROVE:</strong> This user will gain full administrative privileges including the ability to manage movies, users, and system settings.</p>"
+                    + "      <p><strong>DECLINE:</strong> This user's registration request will be rejected and their account will be permanently deleted from the system.</p>"
+                    + "      <p style=\"color: #d63031; font-weight: 600;\">⚠️ Only approve requests from trusted individuals. Declined requests cannot be recovered.</p>"
+                    + "      <p>If you don't recognize this request, please investigate immediately and consider declining.</p>"
                     + "    </div>"
                     + "  </div>"
                     + "  <div class=\"footer\">"
-                    + "    <p>This is an automated security notification from MovieDekho Admin System</p>"
-                    + "    <p>© " + java.time.Year.now().getValue() + " MovieDekho. All rights reserved.</p>"
+                    + "    <p>This is an automated security notification from CineBook Admin System</p>"
+                    + "    <p>© " + java.time.Year.now().getValue() + " CineBook. All rights reserved.</p>"
                     + "  </div>"
                     + "</div>"
                     + "</body>"
@@ -257,63 +258,18 @@ public class BrevoEmailService {
 
         } catch (Exception e) {
             logger.error("Failed to send admin registration notification for user: {}", adminUsername, e);
-            // Don't throw exception to avoid failing the registration process
         }
     }
 
     public void sendAdminApprovalNotification(String adminEmail, String adminUsername, boolean approved, String reason) {
         try {
-            String subject = approved ? "Admin Access Approved - MovieDekho" : "Admin Access Denied - MovieDekho";
-            String status = approved ? "APPROVED" : "REJECTED";
-            String statusColor = approved ? "#28a745" : "#dc3545";
-            String statusIcon = approved ? "✅" : "❌";
-            String headerBg = approved ?
-                    "background: linear-gradient(135deg, #28a745 0%, #218838 100%);" :
-                    "background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);";
-
-            String htmlContent = "<!DOCTYPE html>"
-                    + "<html lang=\"en\">"
-                    + "<head>"
-                    + "<meta charset=\"UTF-8\">"
-                    + "<title>Admin Access " + status + "</title>"
-                    + "<style>"
-                    + "  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');"
-                    + "  body { font-family: 'Poppins', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb; }"
-                    + "  .container { max-width: 650px; margin: 20px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }"
-                    + "  .header { " + headerBg + " padding: 35px; text-align: center; }"
-                    + "  .status { color: white; font-size: 32px; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: center; }"
-                    + "  .status-icon { margin-right: 15px; font-size: 40px; }"
-                    + "  .content { padding: 35px; }"
-                    + "  .card { background-color: " + (approved ? "#e8f5e9" : "#ffebee") + "; border-left: 4px solid " + statusColor + "; padding: 30px; border-radius: 0 10px 10px 0; margin-bottom: 30px; }"
-                    + "  .card-title { color: " + (approved ? "#1b5e20" : "#b71c1c") + "; font-size: 22px; font-weight: 600; margin-top: 0; margin-bottom: 15px; }"
-                    + "  .message { color: " + (approved ? "#1b5e20" : "#b71c1c") + "; font-size: 16px; line-height: 1.6; margin: 0; }"
-                    + "  .details { background-color: #f8f9fa; padding: 30px; border-radius: 10px; margin: 30px 0; }"
-                    + "  .details-title { color: #2d3748; font-size: 20px; font-weight: 600; margin-top: 0; margin-bottom: 20px; }"
-                    + "  .detail-row { display: flex; margin-bottom: 15px; }"
-                    + "  .detail-label { flex: 0 0 120px; color: #4a5568; font-weight: 500; }"
-                    + "  .detail-value { flex: 1; color: #1a202c; font-weight: 400; }"
-                    + "  .footer { text-align: center; padding: 25px; color: #718096; font-size: 13px; border-top: 1px solid #e2e8f0; }"
-                    + "  .list { padding-left: 20px; margin: 20px 0; }"
-                    + "  .list li { margin-bottom: 12px; color: #2d3748; }"
-                    + "  .reason-box { background-color: #fff3cd; padding: 20px; border-radius: 8px; margin-top: 20px; }"
-                    + "  .reason-title { color: #856404; font-weight: 600; margin-top: 0; }"
-                    + "  .reason-text { color: #856404; margin: 0; line-height: 1.6; }"
-                    + "</style>"
-                    + "</head>"
-                    + "<body>"
-                    + "<div class=\"container\">"
-                    + "  <div class=\"header\">"
-                    + "    <div class=\"status\"><span class=\"status-icon\">" + statusIcon + "</span> Admin Access " + status + "</div>"
-                    + "  </div>"
-                    + "  <div class=\"content\">"
-                    + "    <div class=\"card\">"
-                    + "      <h2 class=\"card-title\">Hello " + adminUsername + ",</h2>"
-                    + "      <p class=\"message\">Your admin registration request has been <strong>" + status.toLowerCase() + "</strong>.</p>";
+            String subject = approved ? "Admin Access Approved - CineBook" : "Admin Access Denied - CineBook";
+            String htmlContent = getString(adminUsername, approved);
 
             if (approved) {
                 htmlContent += "</div>"
                         + "<div class=\"details\">"
-                        + "  <h3 class=\"details-title\">Welcome to MovieDekho Admin Panel!</h3>"
+                        + "  <h3 class=\"details-title\">Welcome to CineBook Admin Panel!</h3>"
                         + "  <p>You now have access to these administrative features:</p>"
                         + "  <ul class=\"list\">"
                         + "    <li>Manage movies and screening slots</li>"
@@ -340,8 +296,8 @@ public class BrevoEmailService {
 
             htmlContent += "  </div>"
                     + "  <div class=\"footer\">"
-                    + "    <p>This is an automated notification from MovieDekho Admin System</p>"
-                    + "    <p>© " + java.time.Year.now().getValue() + " MovieDekho. All rights reserved.</p>"
+                    + "    <p>This is an automated notification from CineBook Admin System</p>"
+                    + "    <p>© " + java.time.Year.now().getValue() + " CineBook. All rights reserved.</p>"
                     + "  </div>"
                     + "</div>"
                     + "</body></html>";
@@ -352,5 +308,54 @@ public class BrevoEmailService {
         } catch (Exception e) {
             logger.error("Failed to send admin approval notification to: {}", adminEmail, e);
         }
+    }
+
+    private static String getString(String adminUsername, boolean approved) {
+        String status = approved ? "APPROVED" : "REJECTED";
+        String statusColor = approved ? "#28a745" : "#dc3545";
+        String statusIcon = approved ? "✅" : "❌";
+        String headerBg = approved ?
+                "background: linear-gradient(135deg, #28a745 0%, #218838 100%);" :
+                "background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);";
+
+        String htmlContent = "<!DOCTYPE html>"
+                + "<html lang=\"en\">"
+                + "<head>"
+                + "<meta charset=\"UTF-8\">"
+                + "<title>Admin Access " + status + "</title>"
+                + "<style>"
+                + "  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');"
+                + "  body { font-family: 'Poppins', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb; }"
+                + "  .container { max-width: 650px; margin: 20px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }"
+                + "  .header { " + headerBg + " padding: 35px; text-align: center; }"
+                + "  .status { color: white; font-size: 32px; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: center; }"
+                + "  .status-icon { margin-right: 15px; font-size: 40px; }"
+                + "  .content { padding: 35px; }"
+                + "  .card { background-color: " + (approved ? "#e8f5e9" : "#ffebee") + "; border-left: 4px solid " + statusColor + "; padding: 30px; border-radius: 0 10px 10px 0; margin-bottom: 30px; }"
+                + "  .card-title { color: " + (approved ? "#1b5e20" : "#b71c1c") + "; font-size: 22px; font-weight: 600; margin-top: 0; margin-bottom: 15px; }"
+                + "  .message { color: " + (approved ? "#1b5e20" : "#b71c1c") + "; font-size: 16px; line-height: 1.6; margin: 0; }"
+                + "  .details { background-color: #f8f9fa; padding: 30px; border-radius: 10px; margin: 30px 0; }"
+                + "  .details-title { color: #2d3748; font-size: 20px; font-weight: 600; margin-top: 0; margin-bottom: 20px; }"
+                + "  .detail-row { display: flex; margin-bottom: 15px; }"
+                + "  .detail-label { flex: 0 0 120px; color: #4a5568; font-weight: 500; }"
+                + "  .detail-value { flex: 1; color: #1a202c; font-weight: 400; }"
+                + "  .footer { text-align: center; padding: 25px; color: #718096; font-size: 13px; border-top: 1px solid #e2e8f0; }"
+                + "  .list { padding-left: 20px; margin: 20px 0; }"
+                + "  .list li { margin-bottom: 12px; color: #2d3748; }"
+                + "  .reason-box { background-color: #fff3cd; padding: 20px; border-radius: 8px; margin-top: 20px; }"
+                + "  .reason-title { color: #856404; font-weight: 600; margin-top: 0; }"
+                + "  .reason-text { color: #856404; margin: 0; line-height: 1.6; }"
+                + "</style>"
+                + "</head>"
+                + "<body>"
+                + "<div class=\"container\">"
+                + "  <div class=\"header\">"
+                + "    <div class=\"status\"><span class=\"status-icon\">" + statusIcon + "</span> Admin Access " + status + "</div>"
+                + "  </div>"
+                + "  <div class=\"content\">"
+                + "    <div class=\"card\">"
+                + "      <h2 class=\"card-title\">Hello " + adminUsername + ",</h2>"
+                + "      <p class=\"message\">Your admin registration request has been <strong>" + status.toLowerCase() + "</strong>.</p>";
+        return htmlContent;
     }
 }

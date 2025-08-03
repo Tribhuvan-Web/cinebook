@@ -64,7 +64,7 @@ public class UserService {
 
     public void sendWelcomeEmail(User user) {
         try {
-            String subject = "🎬 Welcome to MovieDekho – Your Gateway to Blockbuster Entertainment!";
+            String subject = "🎬 Welcome to CineBook – Your Gateway to Blockbuster Entertainment!";
             String content = "<!DOCTYPE html>"
                     + "<html>"
                     + "<head>"
@@ -88,14 +88,14 @@ public class UserService {
                     + "</head>"
                     + "<body>"
                     + "  <div class='header'>"
-                    + "    <h1>MovieDekho</h1>"
+                    + "    <h1>CineBook</h1>"
                     + "  </div>"
                     + "  <div class='content'>"
                     + "    <h2>Hi " + user.getUsername() + ",</h2>"
-                    + "    <p>Welcome to MovieDekho – where movie magic begins! 🍿</p>"
+                    + "    <p>Welcome to CineBook – where movie magic begins! 🍿</p>"
                     + "    <p>We're thrilled to have you onboard.</p>"
                     + "    "
-                    + "    <p>With MovieDekho, you can:</p>"
+                    + "    <p>With CineBook, you can:</p>"
                     + "    <div class='features'>"
                     + "      <div class='feature-item'><span class='feature-icon'>✅</span> Discover the latest movie releases</div>"
                     + "      <div class='feature-item'><span class='feature-icon'>✅</span> Book tickets instantly with ease</div>"
@@ -111,15 +111,15 @@ public class UserService {
                     + "    </div>"
                     + "    "
                     + "    <p>If you have any questions or need help, we're just an email away at "
-                    + "       <span class='highlight'>support@moviedekho.com</span>.</p>"
+                    + "       <span class='highlight'>tribhuvannathh4567@gmail.com</span>.</p>"
                     + "    "
                     + "    <div class='signature'>Lights. Camera. Action.</div>"
                     + "    "
                     + "    <p style='text-align: center; font-weight: bold;'>Team MovieDekho</p>"
                     + "  </div>"
                     + "  <div class='footer'>"
-                    + "    <p>© 2023 MovieDekho. All rights reserved.</p>"
-                    + "    <p>123 Cinema Street, Movieville | <a href='https://moviedekho.com'>www.moviedekho.com</a></p>"
+                    + "    <p>© 2025 CineBook. All rights reserved.</p>"
+                    + "    <p> Kurthaul,Patna   | <a href='https://moviedekho.com'>www.moviedekho.com</a></p>"
                     + "    <p>You're receiving this email because you created an account with MovieDekho.</p>"
                     + "  </div>"
                     + "</body>"
@@ -131,14 +131,8 @@ public class UserService {
         }
     }
 
-    /**
-     * Login user using email/phone and password
-     * Note: Despite the field name "username" in LoginUserDTO, this method accepts email or phone
-     * for authentication, not the display username which is non-unique
-     */
     public JwtAuthenticationResponse loginUser(@RequestBody LoginUserDTO user) {
         try {
-            // The "username" field in DTO actually contains email or phone for authentication
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
             );
@@ -152,10 +146,6 @@ public class UserService {
         }
     }
 
-    /**
-     * Find user by email or phone (not by display username)
-     * This method is used for authentication purposes
-     */
     public User findByUsername(String emailOrPhone) {
         Optional<User> user = userRepository.findByEmail(emailOrPhone);
         if (user.isPresent()) {

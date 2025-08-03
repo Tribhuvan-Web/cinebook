@@ -33,4 +33,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByRoleIn(List<String> roles);
     
     List<User> findByRole(String role);
+
+    // Methods for favorite movies functionality
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.favoriteMovies WHERE u.email = :identifier OR u.phone = :identifier")
+    Optional<User> findByEmailOrPhoneWithFavorites(@Param("identifier") String identifier);
 }

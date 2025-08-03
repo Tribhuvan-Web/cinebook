@@ -63,10 +63,10 @@ public class WebSecurityConfig {
                                 .requestMatchers("/api/super-admin/**").permitAll()
                                 
                                 // Admin endpoints - must be defined before general patterns
-                                .requestMatchers("/movies/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/api/seats/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/api/slots/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/movies/admin/**").hasRole("USER")
+                                .requestMatchers("/api/admin/**").hasRole("USER")
+                                .requestMatchers("/api/seats/admin/**").hasRole("USER")
+                                .requestMatchers("/api/slots/admin/**").hasRole("USER")
 
                                 // Public movie endpoints
                                 .requestMatchers("/movies/recent").permitAll()

@@ -5,6 +5,7 @@ import com.movieDekho.MovieDekho.dtos.movie.MovieResponseDTO;
 import com.movieDekho.MovieDekho.dtos.user.UserResponseDTO;
 import com.movieDekho.MovieDekho.models.User;
 import com.movieDekho.MovieDekho.repository.UserRepository;
+import com.movieDekho.MovieDekho.service.userService.FavoritesService;
 import com.movieDekho.MovieDekho.util.UserMapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,6 +27,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final FavoritesService favoritesService;
 
     @GetMapping("/profile")
     public ResponseEntity<?> getUserProfile(@RequestHeader("Authorization") String authHeader) {
@@ -47,7 +49,7 @@ public class UserController {
 
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestHeader("Authorization") String authHeader,
-                                           @RequestBody UserProfileUpdateRequest request) {
+            @RequestBody UserProfileUpdateRequest request) {
         try {
             String username = extractUsernameFromToken(authHeader);
             Optional<User> userOpt = userRepository.findByEmailOrPhone(username);
@@ -76,7 +78,7 @@ public class UserController {
 
     @PutMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestHeader("Authorization") String authHeader,
-                                            @RequestBody ChangePasswordRequest request) {
+            @RequestBody ChangePasswordRequest request) {
         try {
             String username = extractUsernameFromToken(authHeader);
             Optional<User> userOpt = userRepository.findByEmailOrPhone(username);
@@ -109,10 +111,52 @@ public class UserController {
     @GetMapping("/favorites")
     public ResponseEntity<?> getFavoriteMovies(@RequestHeader("Authorization") String authHeader) {
         try {
-            return ResponseEntity.ok("Favorites feature coming soon");
+            String username = extractUsernameFromToken(authHeader);
+            List<MovieResponseDTO> favorites = favoritesService.getFavoriteMovies(username);
+            return ResponseEntity.ok(favorites);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error fetching favorites: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/favorites/{movieId}")
+    public ResponseEntity<?> addToFavorites(@RequestHeader("Authorization") String authHeader,
+            @PathVariable Long movieId) {
+        try {
+            String username = extractUsernameFromToken(authHeader);
+            String message = favoritesService.addToFavorites(username, movieId);
+            return ResponseEntity.ok(message);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error adding to favorites: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/favorites/{movieId}")
+    public ResponseEntity<?> removeFromFavorites(@RequestHeader("Authorization") String authHeader,
+            @PathVariable Long movieId) {
+        try {
+            String username = extractUsernameFromToken(authHeader);
+            String message = favoritesService.removeFromFavorites(username, movieId);
+            return ResponseEntity.ok(message);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error removing from favorites: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/favorites/deleteall")
+    public ResponseEntity<?> removeAllFavorites(@RequestHeader("Authorization") String authHeader) {
+        try {
+            String username = extractUsernameFromToken(authHeader);
+            favoritesService.removeAllFavorites(username);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body("Remove all favorites");
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Error deleting all favorites: " + e.getMessage());
         }
     }
 
@@ -138,7 +182,6 @@ public class UserController {
         return jwtUtils.getNameFromJwt(token);
     }
 
-
     @Data
     public static class UserProfileUpdateRequest {
         private String username;
@@ -157,5 +200,7 @@ public class UserController {
     public static class UserDashboardResponse {
         private UserResponseDTO user;
         private List<MovieResponseDTO> recentMovies;
+        private int favoriteMoviesCount;
+        private List<MovieResponseDTO> recentFavorites;
     }
 }

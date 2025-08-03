@@ -2,6 +2,8 @@ package com.movieDekho.MovieDekho.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(uniqueConstraints = {
@@ -42,4 +44,13 @@ public class User {
 
     @Column
     private java.time.LocalDateTime approvedAt; // When admin was approved
+
+    // Many-to-many relationship for favorite movies
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+        name = "user_favorite_movies",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "movie_id")
+    )
+    private List<AvailableMovie> favoriteMovies = new ArrayList<>();
 }

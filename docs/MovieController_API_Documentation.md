@@ -1,9 +1,12 @@
 # MovieController - Complete API Documentation
 
-This document provides comprehensive documentation for the MovieController in the MovieDekho application, covering movie management operations for both administrators and regular users.
+This document provides comprehensive documentation for the MovieController in the MovieDekho application, covering movie
+management operations for both administrators and regular users.
 
 ## Base URL
+
 Assuming the application runs on localhost:8080, the base URL is:
+
 ```
 http://localhost:8080/api/movies
 ```
@@ -13,6 +16,7 @@ http://localhost:8080/api/movies
 ## 🎬 MOVIE MANAGEMENT ENDPOINTS
 
 ### 1. Add New Movie (Admin Only)
+
 **Endpoint:** `POST /add`  
 **Authentication:** Required (Admin Role)
 
@@ -38,8 +42,8 @@ curl -X POST http://localhost:8080/api/movies/add \
 ```
 
 ### 2. Get All Movies
-**Endpoint:** `GET /all`  
-**Authentication:** Optional
+
+**Endpoint:** `GET /all`
 
 Retrieves all movies from the system. Accessible to all users.
 
@@ -49,8 +53,8 @@ curl -X GET http://localhost:8080/api/movies/all \
 ```
 
 ### 3. Get Movie by ID
-**Endpoint:** `GET /{id}`  
-**Authentication:** Optional
+
+**Endpoint:** `GET /{id}`
 
 Retrieves a specific movie by its ID.
 
@@ -65,6 +69,7 @@ curl -X GET http://localhost:8080/api/movies/5 \
 ```
 
 ### 4. Update Movie (Admin Only)
+
 **Endpoint:** `PUT /{id}`  
 **Authentication:** Required (Admin Role)
 
@@ -90,6 +95,7 @@ curl -X PUT http://localhost:8080/api/movies/1 \
 ```
 
 ### 5. Delete Movie (Admin Only)
+
 **Endpoint:** `DELETE /{id}`  
 **Authentication:** Required (Admin Role)
 
@@ -101,8 +107,8 @@ curl -X DELETE http://localhost:8080/api/movies/1 \
 ```
 
 ### 6. Search Movies
-**Endpoint:** `GET /search`  
-**Authentication:** Optional
+
+**Endpoint:** `GET /search`
 
 Searches for movies based on various criteria.
 
@@ -133,6 +139,7 @@ curl -X GET "http://localhost:8080/api/movies/search?title=Dark&language=English
 ```
 
 ### 7. Filter Movies by Genre
+
 **Endpoint:** `GET /genre/{genre}`  
 **Authentication:** Optional
 
@@ -153,6 +160,7 @@ curl -X GET http://localhost:8080/api/movies/genre/Drama \
 ```
 
 ### 8. Filter Movies by Language
+
 **Endpoint:** `GET /language/{language}`  
 **Authentication:** Optional
 
@@ -173,6 +181,7 @@ curl -X GET http://localhost:8080/api/movies/language/Spanish \
 ```
 
 ### 9. Get Movies by Rating Range
+
 **Endpoint:** `GET /rating-range`  
 **Authentication:** Optional
 
@@ -190,195 +199,6 @@ curl -X GET "http://localhost:8080/api/movies/rating-range?minRating=7.0&maxRati
 # Get high-rated movies (9.0+)
 curl -X GET "http://localhost:8080/api/movies/rating-range?minRating=9.0&maxRating=10.0" \
   -H "Accept: application/json"
-```
-
----
-
-## 📊 EXAMPLE RESPONSES
-
-### Successful Movie Addition
-```json
-{
-  "id": 1,
-  "title": "Avengers: Endgame",
-  "description": "The epic conclusion to the Infinity Saga that the universe has been building towards for twenty-two films.",
-  "duration": 181,
-  "language": "English",
-  "releaseDate": "2019-04-26",
-  "genre": "Action, Drama, Adventure",
-  "rating": 8.4,
-  "cast": "Robert Downey Jr., Chris Evans, Mark Ruffalo, Chris Hemsworth",
-  "director": "Anthony Russo, Joe Russo",
-  "posterUrl": "https://example.com/posters/avengers-endgame.jpg",
-  "trailerUrl": "https://example.com/trailers/avengers-endgame.mp4",
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T10:30:00"
-}
-```
-
-### All Movies Response
-```json
-[
-  {
-    "id": 1,
-    "title": "Avengers: Endgame",
-    "description": "The epic conclusion to the Infinity Saga...",
-    "duration": 181,
-    "language": "English",
-    "releaseDate": "2019-04-26",
-    "genre": "Action, Drama, Adventure",
-    "rating": 8.4,
-    "cast": "Robert Downey Jr., Chris Evans, Mark Ruffalo, Chris Hemsworth",
-    "director": "Anthony Russo, Joe Russo",
-    "posterUrl": "https://example.com/posters/avengers-endgame.jpg",
-    "trailerUrl": "https://example.com/trailers/avengers-endgame.mp4"
-  },
-  {
-    "id": 2,
-    "title": "The Dark Knight",
-    "description": "When the menace known as the Joker wreaks havoc...",
-    "duration": 152,
-    "language": "English",
-    "releaseDate": "2008-07-18",
-    "genre": "Action, Crime, Drama",
-    "rating": 9.0,
-    "cast": "Christian Bale, Heath Ledger, Aaron Eckhart",
-    "director": "Christopher Nolan",
-    "posterUrl": "https://example.com/posters/dark-knight.jpg",
-    "trailerUrl": "https://example.com/trailers/dark-knight.mp4"
-  }
-]
-```
-
-### Single Movie Response
-```json
-{
-  "id": 1,
-  "title": "Avengers: Endgame",
-  "description": "The epic conclusion to the Infinity Saga that the universe has been building towards for twenty-two films.",
-  "duration": 181,
-  "language": "English",
-  "releaseDate": "2019-04-26",
-  "genre": "Action, Drama, Adventure",
-  "rating": 8.4,
-  "cast": "Robert Downey Jr., Chris Evans, Mark Ruffalo, Chris Hemsworth",
-  "director": "Anthony Russo, Joe Russo",
-  "posterUrl": "https://example.com/posters/avengers-endgame.jpg",
-  "trailerUrl": "https://example.com/trailers/avengers-endgame.mp4",
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T10:30:00"
-}
-```
-
-### Search Results Response
-```json
-[
-  {
-    "id": 1,
-    "title": "Avengers: Endgame",
-    "description": "The epic conclusion to the Infinity Saga...",
-    "duration": 181,
-    "language": "English",
-    "releaseDate": "2019-04-26",
-    "genre": "Action, Drama, Adventure",
-    "rating": 8.4,
-    "cast": "Robert Downey Jr., Chris Evans, Mark Ruffalo, Chris Hemsworth",
-    "director": "Anthony Russo, Joe Russo"
-  },
-  {
-    "id": 3,
-    "title": "Avengers: Infinity War",
-    "description": "The Avengers and their allies must be willing to sacrifice all...",
-    "duration": 149,
-    "language": "English",
-    "releaseDate": "2018-04-27",
-    "genre": "Action, Adventure, Drama",
-    "rating": 8.4,
-    "cast": "Robert Downey Jr., Chris Hemsworth, Mark Ruffalo",
-    "director": "Anthony Russo, Joe Russo"
-  }
-]
-```
-
-### Error Responses
-
-**404 - Movie Not Found:**
-```json
-{
-  "timestamp": "2024-01-15T10:30:00",
-  "status": 404,
-  "error": "Not Found",
-  "message": "Movie not found with id: 999",
-  "path": "/api/movies/999"
-}
-```
-
-**403 - Forbidden (Admin Only Endpoints):**
-```json
-{
-  "timestamp": "2024-01-15T10:30:00",
-  "status": 403,
-  "error": "Forbidden",
-  "message": "Access denied. Admin role required.",
-  "path": "/api/movies/add"
-}
-```
-
-**400 - Bad Request:**
-```json
-{
-  "timestamp": "2024-01-15T10:30:00",
-  "status": 400,
-  "error": "Bad Request",
-  "message": "Validation failed",
-  "path": "/api/movies/add",
-  "validationErrors": [
-    "Title is required",
-    "Duration must be positive",
-    "Rating must be between 0 and 10"
-  ]
-}
-```
-
----
-
-## 📋 DATA TRANSFER OBJECTS (DTOs)
-
-### MovieDto (Request/Response)
-```json
-{
-  "title": "Movie Title",
-  "description": "Detailed movie description",
-  "duration": 120,
-  "language": "English",
-  "releaseDate": "2024-01-15",
-  "genre": "Action, Drama",
-  "rating": 8.5,
-  "cast": "Actor 1, Actor 2, Actor 3",
-  "director": "Director Name",
-  "posterUrl": "https://example.com/poster.jpg",
-  "trailerUrl": "https://example.com/trailer.mp4"
-}
-```
-
-### Movie Entity (Full Response)
-```json
-{
-  "id": 1,
-  "title": "Movie Title",
-  "description": "Detailed movie description",
-  "duration": 120,
-  "language": "English",
-  "releaseDate": "2024-01-15",
-  "genre": "Action, Drama",
-  "rating": 8.5,
-  "cast": "Actor 1, Actor 2, Actor 3",
-  "director": "Director Name",
-  "posterUrl": "https://example.com/poster.jpg",
-  "trailerUrl": "https://example.com/trailer.mp4",
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T10:30:00"
-}
 ```
 
 ---
@@ -520,203 +340,17 @@ curl -X GET "http://localhost:8080/api/movies/rating-range?minRating=7.5&maxRati
 
 ---
 
-## 🔧 TESTING DIFFERENT SCENARIOS
-
-### Test Movie Validation
-
-```bash
-# Test adding movie with missing required fields
-curl -X POST http://localhost:8080/api/movies/add \
-  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "",
-    "description": "Test movie without title"
-  }'
-
-# Test adding movie with invalid rating
-curl -X POST http://localhost:8080/api/movies/add \
-  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Test Movie",
-    "description": "Test description",
-    "duration": 120,
-    "language": "English",
-    "releaseDate": "2024-01-15",
-    "genre": "Action",
-    "rating": 15.0,
-    "cast": "Test Actor",
-    "director": "Test Director"
-  }'
-
-# Test adding movie with negative duration
-curl -X POST http://localhost:8080/api/movies/add \
-  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Invalid Duration Movie",
-    "description": "Movie with negative duration",
-    "duration": -10,
-    "language": "English",
-    "releaseDate": "2024-01-15",
-    "genre": "Action",
-    "rating": 7.5,
-    "cast": "Test Actor",
-    "director": "Test Director"
-  }'
-```
-
-### Test Access Control
-
-```bash
-# Test admin operations without authentication
-curl -X POST http://localhost:8080/api/movies/add \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Unauthorized Movie",
-    "description": "Should fail without auth"
-  }'
-
-# Test admin operations with user token (should fail)
-curl -X POST http://localhost:8080/api/movies/add \
-  -H "Authorization: Bearer USER_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "User Trying Admin Action",
-    "description": "Should fail with user token"
-  }'
-
-# Test updating non-existent movie
-curl -X PUT http://localhost:8080/api/movies/999999 \
-  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Non-existent Movie Update",
-    "description": "Should return 404"
-  }'
-
-# Test deleting non-existent movie
-curl -X DELETE http://localhost:8080/api/movies/999999 \
-  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN"
-```
-
-### Test Search Edge Cases
-
-```bash
-# Test search with empty parameters
-curl -X GET "http://localhost:8080/api/movies/search?" \
-  -H "Accept: application/json"
-
-# Test search with non-existent criteria
-curl -X GET "http://localhost:8080/api/movies/search?title=NonExistentMovie" \
-  -H "Accept: application/json"
-
-# Test rating range with invalid parameters
-curl -X GET "http://localhost:8080/api/movies/rating-range?minRating=10&maxRating=5" \
-  -H "Accept: application/json"
-
-# Test genre filter with non-existent genre
-curl -X GET http://localhost:8080/api/movies/genre/NonExistentGenre \
-  -H "Accept: application/json"
-
-# Test language filter with non-existent language
-curl -X GET http://localhost:8080/api/movies/language/NonExistentLanguage \
-  -H "Accept: application/json"
-```
-
----
-
-## 💻 PowerShell Examples (For Windows Users)
-
-```powershell
-# Add movie using PowerShell
-$adminToken = "YOUR_ADMIN_JWT_TOKEN"
-$movieData = @{
-    title = "Spider-Man: No Way Home"
-    description = "Peter Parker seeks help from Doctor Strange when his identity is revealed."
-    duration = 148
-    language = "English"
-    releaseDate = "2021-12-17"
-    genre = "Action, Adventure, Fantasy"
-    rating = 8.2
-    cast = "Tom Holland, Zendaya, Benedict Cumberbatch"
-    director = "Jon Watts"
-    posterUrl = "https://example.com/posters/spiderman-nwh.jpg"
-    trailerUrl = "https://example.com/trailers/spiderman-nwh.mp4"
-} | ConvertTo-Json
-
-Invoke-RestMethod -Uri "http://localhost:8080/api/movies/add" `
-  -Method POST `
-  -Headers @{
-    "Authorization" = "Bearer $adminToken"
-    "Content-Type" = "application/json"
-  } `
-  -Body $movieData
-
-# Get all movies
-$movies = Invoke-RestMethod -Uri "http://localhost:8080/api/movies/all" `
-  -Method GET `
-  -Headers @{"Accept" = "application/json"}
-
-Write-Output "Total movies: $($movies.Count)"
-
-# Search for action movies
-$actionMovies = Invoke-RestMethod -Uri "http://localhost:8080/api/movies/search?genre=Action" `
-  -Method GET `
-  -Headers @{"Accept" = "application/json"}
-
-Write-Output "Action movies found: $($actionMovies.Count)"
-
-# Get high-rated movies
-$highRatedMovies = Invoke-RestMethod -Uri "http://localhost:8080/api/movies/rating-range?minRating=8.0&maxRating=10.0" `
-  -Method GET `
-  -Headers @{"Accept" = "application/json"}
-
-foreach ($movie in $highRatedMovies) {
-    Write-Output "$($movie.title) - Rating: $($movie.rating)"
-}
-
-# Update movie
-$updatedMovieData = @{
-    title = "Spider-Man: No Way Home - Extended Edition"
-    description = "Peter Parker seeks help from Doctor Strange when his identity is revealed. Extended version with deleted scenes."
-    duration = 165
-    language = "English"
-    releaseDate = "2021-12-17"
-    genre = "Action, Adventure, Fantasy"
-    rating = 8.4
-    cast = "Tom Holland, Zendaya, Benedict Cumberbatch"
-    director = "Jon Watts"
-    posterUrl = "https://example.com/posters/spiderman-nwh-extended.jpg"
-    trailerUrl = "https://example.com/trailers/spiderman-nwh-extended.mp4"
-} | ConvertTo-Json
-
-Invoke-RestMethod -Uri "http://localhost:8080/api/movies/1" `
-  -Method PUT `
-  -Headers @{
-    "Authorization" = "Bearer $adminToken"
-    "Content-Type" = "application/json"
-  } `
-  -Body $updatedMovieData
-
-# Delete movie
-Invoke-RestMethod -Uri "http://localhost:8080/api/movies/1" `
-  -Method DELETE `
-  -Headers @{"Authorization" = "Bearer $adminToken"}
-```
-
----
-
 ## 🎯 KEY FEATURES
 
 ### Movie Management:
+
 - ✅ **CRUD Operations** - Complete create, read, update, delete functionality
 - ✅ **Admin Controls** - Secure admin-only movie management
 - ✅ **Rich Metadata** - Comprehensive movie information storage
 - ✅ **Media URLs** - Support for poster and trailer links
 
 ### Search & Discovery:
+
 - ✅ **Multi-criteria Search** - Search by title, genre, language, director, cast
 - ✅ **Genre Filtering** - Filter movies by specific genres
 - ✅ **Language Filtering** - Filter movies by language
@@ -724,12 +358,14 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/movies/1" `
 - ✅ **Combined Filters** - Use multiple search criteria simultaneously
 
 ### User Experience:
+
 - ✅ **Public Access** - Browse movies without authentication
 - ✅ **Detailed Information** - Complete movie metadata
 - ✅ **Flexible Search** - Multiple ways to discover content
 - ✅ **Real-time Updates** - Admin changes reflected immediately
 
 ### Data Management:
+
 - ✅ **Validation** - Input validation for movie data
 - ✅ **Error Handling** - Comprehensive error responses
 - ✅ **Timestamps** - Creation and update tracking
@@ -752,63 +388,8 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/movies/1" `
 
 ---
 
-## 🔄 INTEGRATION PATTERNS
-
-### Frontend Integration:
-```javascript
-// Movie browsing functionality
-const getMovies = async () => {
-  const response = await fetch('/api/movies/all');
-  return await response.json();
-};
-
-const searchMovies = async (searchParams) => {
-  const queryString = new URLSearchParams(searchParams).toString();
-  const response = await fetch(`/api/movies/search?${queryString}`);
-  return await response.json();
-};
-
-const getMovieDetails = async (movieId) => {
-  const response = await fetch(`/api/movies/${movieId}`);
-  return await response.json();
-};
-
-// Admin functionality
-const addMovie = async (movieData, adminToken) => {
-  const response = await fetch('/api/movies/add', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${adminToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(movieData)
-  });
-  return await response.json();
-};
-
-const updateMovie = async (movieId, movieData, adminToken) => {
-  const response = await fetch(`/api/movies/${movieId}`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${adminToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(movieData)
-  });
-  return await response.json();
-};
-
-const deleteMovie = async (movieId, adminToken) => {
-  await fetch(`/api/movies/${movieId}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${adminToken}`
-    }
-  });
-};
-```
-
 ### Movie Booking Integration:
+
 ```bash
 # Typical flow: Browse -> Select -> Book
 # 1. User browses movies
