@@ -53,7 +53,6 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
         
-        // Only send welcome email for regular users and approved admins
         if ("ROLE_USER".equals(user.getRole()) || 
             ("ROLE_ADMIN".equals(user.getRole()) && user.getIsApproved())) {
             sendWelcomeEmail(savedUser);

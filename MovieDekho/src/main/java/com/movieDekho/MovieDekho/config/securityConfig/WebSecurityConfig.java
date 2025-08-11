@@ -25,12 +25,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @AllArgsConstructor
 public class WebSecurityConfig {
 
-    private UserDetailsServiceImpl detailsService;
-
-    @Bean
-    public JwtAuthFilter getJwtAuthFilter() {
-        return new JwtAuthFilter();
-    }
+    private final UserDetailsServiceImpl detailsService;
+    private final JwtAuthFilter jwtAuthFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -59,9 +55,19 @@ public class WebSecurityConfig {
                                 // Public authentication endpoints
                                 .requestMatchers("/api/auth/**").permitAll()
                                 
+                                // Swagger UI endpoints
+                                .requestMatchers("/api/swagger-ui.html").permitAll()
+                                .requestMatchers("/api/swagger-ui/**").permitAll()
+                                .requestMatchers("/swagger-ui.html").permitAll()
+                                .requestMatchers("/swagger-ui/**").permitAll()
+                                .requestMatchers("/api/docs/**").permitAll()
+                                .requestMatchers("/v3/api-docs/**").permitAll()
+                                .requestMatchers("/swagger-resources/**").permitAll()
+                                .requestMatchers("/webjars/**").permitAll()
+
                                 // Super Admin endpoints - public access via email links
                                 .requestMatchers("/api/super-admin/**").permitAll()
-                                
+
                                 // Admin endpoints - must be defined before general patterns
                                 .requestMatchers("/movies/admin/**").hasRole("USER")
                                 .requestMatchers("/api/admin/**").hasRole("USER")
@@ -84,17 +90,20 @@ public class WebSecurityConfig {
 
                                 // User endpoints
                                 .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
-                                
+
                                 // Seat endpoints for authenticated users
                                 .requestMatchers("/api/seats/slot/**").hasAnyRole("USER", "ADMIN")
                                 .requestMatchers("/api/seats/{seatId}").hasAnyRole("USER", "ADMIN")
                                 .requestMatchers("/api/seats/{seatId}/availability").hasAnyRole("USER", "ADMIN")
 
+                                // Booking endpoints
+                                .requestMatchers("/api/bookings/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/api/bookings/**").hasRole("USER")
                                 // All other requests require authentication
                                 .anyRequest().authenticated());
 
         security.authenticationProvider(daoAuthenticationProvider());
-        security.addFilterBefore(getJwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
+        security.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return security.build();
     }

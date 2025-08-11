@@ -73,14 +73,11 @@ public class BrevoEmailService {
                     .to(Collections.singletonList(to))
                     .subject("Your Login OTP Code")
                     .htmlContent(htmlContent)
-                    .textContent(textContent) // Add plain text version
-                    .tags(Collections.singletonList("otp-email")); // Add tags for tracking
+                    .textContent(textContent)
+                    .tags(Collections.singletonList("otp-email"));
 
             apiInstance.sendTransacEmail(sendSmtpEmail);
         } catch (Exception e) {
-            logger.error("Failed to send OTP email to {}: {}", recipientEmail, e.getMessage(), e);
-
-            // Log more specific error information
             if (e.getMessage() != null) {
                 if (e.getMessage().contains("401")) {
                     logger.error("Authentication failed - check your API key");
@@ -105,7 +102,7 @@ public class BrevoEmailService {
             TransactionalEmailsApi apiInstance = new TransactionalEmailsApi();
 
             SendSmtpEmailSender sender = new SendSmtpEmailSender()
-                    .email(senderEmail) // This MUST be verified in your Brevo account
+                    .email(senderEmail)
                     .name(senderName);
 
             SendSmtpEmailTo to = new SendSmtpEmailTo()
@@ -116,7 +113,7 @@ public class BrevoEmailService {
                     + "<head><meta charset=\"UTF-8\"><title>Password Reset</title></head>"
                     + "<body style=\"font-family: Arial, sans-serif; margin: 20px;\">"
                     + "<div style=\"max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;\">"
-                    + "<h2 style=\"color: #333; text-align: center;\">Password Reset Request</h2>"
+                    + "<h2 style=\"color: #333; text-align: center;\">Your password reset OTP is </h2>"
                     + "<div style=\"background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 4px; margin: 20px 0;\">"
                     + "<h3 style=\"color: #dc3545; font-size: 24px; margin: 0;\">" + otpCode + "</h3>"
                     + "</div>"
@@ -135,14 +132,10 @@ public class BrevoEmailService {
                     .to(Collections.singletonList(to))
                     .subject("Password Reset Request")
                     .htmlContent(htmlContent)
-                    .textContent(textContent) // Add plain text version
-                    .tags(Collections.singletonList("password-reset-email")); // Add tags for tracking
-
-            CreateSmtpEmail response = apiInstance.sendTransacEmail(sendSmtpEmail);
-            logger.info("Password reset email sent successfully! Message ID: {}", response.getMessageId());
+                    .textContent(textContent)
+                    .tags(Collections.singletonList("password-reset-email"));
 
         } catch (Exception e) {
-            logger.error("Failed to send password reset email to {}: {}", recipientEmail, e.getMessage(), e);
             throw new RuntimeException("Failed to send password reset email: " + e.getMessage(), e);
         }
     }
@@ -169,16 +162,10 @@ public class BrevoEmailService {
                 .subject(subject)
                 .htmlContent(htmlContent);
 
-        try {
-            CreateSmtpEmail response = apiInstance.sendTransacEmail(sendSmtpEmail);
-            logger.info("Email sent successfully! Message ID: {}", response.getMessageId());
-        } catch (Exception e) {
-            logger.error("Failed to send email", e);
-            throw new RuntimeException("Failed to send email", e);
-        }
     }
 
-    public void sendAdminRegistrationNotification(String adminUsername, String adminEmail, String adminPhone, Long userId) {
+    public void sendAdminRegistrationNotification(String adminUsername, String adminEmail, String adminPhone,
+            Long userId) {
         try {
             String subject = "New Admin Registration Request - CineBook";
             String approvalLink = "http://localhost:8080/api/super-admin/approve/" + userId;
@@ -224,10 +211,14 @@ public class BrevoEmailService {
                     + "  <div class=\"content\">"
                     + "    <div>"
                     + "      <h3 class=\"card-title\">Registration Details</h3>"
-                    + "      <div class=\"detail-row\"><div class=\"detail-label\">ADMIN NAME : </div><div class=\"detail-value\">" + adminUsername + "</div></div>"
-                    + "      <div class=\"detail-row\"><div class=\"detail-label\">Email : </div><div class=\"detail-value\">" + adminEmail + "</div></div>"
-                    + "      <div class=\"detail-row\"><div class=\"detail-label\">Phone : </div><div class=\"detail-value\">" + adminPhone + "</div></div>"
-                    + "      <div class=\"detail-row\"><div class=\"detail-label\">Request Time : </div><div class=\"detail-value\">" + dateTime + "</div></div>"
+                    + "      <div class=\"detail-row\"><div class=\"detail-label\">ADMIN NAME : </div><div class=\"detail-value\">"
+                    + adminUsername + "</div></div>"
+                    + "      <div class=\"detail-row\"><div class=\"detail-label\">Email : </div><div class=\"detail-value\">"
+                    + adminEmail + "</div></div>"
+                    + "      <div class=\"detail-row\"><div class=\"detail-label\">Phone : </div><div class=\"detail-value\">"
+                    + adminPhone + "</div></div>"
+                    + "      <div class=\"detail-row\"><div class=\"detail-label\">Request Time : </div><div class=\"detail-value\">"
+                    + dateTime + "</div></div>"
                     + "    </div>"
                     + "    <div class=\"approval-section\">"
                     + "      <h3 class=\"approval-title\">Review Admin Request</h3>"
@@ -254,14 +245,14 @@ public class BrevoEmailService {
                     + "</html>";
 
             sendEmail(superAdminEmail, subject, htmlContent);
-            logger.info("Admin registration notification with approval link sent to super admin for user: {}", adminUsername);
 
         } catch (Exception e) {
             logger.error("Failed to send admin registration notification for user: {}", adminUsername, e);
         }
     }
 
-    public void sendAdminApprovalNotification(String adminEmail, String adminUsername, boolean approved, String reason) {
+    public void sendAdminApprovalNotification(String adminEmail, String adminUsername, boolean approved,
+            String reason) {
         try {
             String subject = approved ? "Admin Access Approved - CineBook" : "Admin Access Denied - CineBook";
             String htmlContent = getString(adminUsername, approved);
@@ -288,7 +279,8 @@ public class BrevoEmailService {
                         + "  <div class=\"detail-row\"><div class=\"detail-label\">Status:</div><div class=\"detail-value\"><strong style=\"color: #dc3545;\">Rejected</strong></div></div>"
                         + "  <div class=\"reason-box\">"
                         + "    <h4 class=\"reason-title\">Reason for Rejection:</h4>"
-                        + "    <p class=\"reason-text\">" + (reason != null ? reason : "No specific reason was provided.") + "</p>"
+                        + "    <p class=\"reason-text\">"
+                        + (reason != null ? reason : "No specific reason was provided.") + "</p>"
                         + "  </div>"
                         + "  <p style=\"margin-top: 20px;\">If you believe this is an error or would like to appeal this decision, please contact our support team.</p>"
                         + "</div>";
@@ -303,7 +295,6 @@ public class BrevoEmailService {
                     + "</body></html>";
 
             sendEmail(adminEmail, subject, htmlContent);
-            logger.info("Admin approval notification sent to: {}", adminEmail);
 
         } catch (Exception e) {
             logger.error("Failed to send admin approval notification to: {}", adminEmail, e);
@@ -314,9 +305,8 @@ public class BrevoEmailService {
         String status = approved ? "APPROVED" : "REJECTED";
         String statusColor = approved ? "#28a745" : "#dc3545";
         String statusIcon = approved ? "✅" : "❌";
-        String headerBg = approved ?
-                "background: linear-gradient(135deg, #28a745 0%, #218838 100%);" :
-                "background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);";
+        String headerBg = approved ? "background: linear-gradient(135deg, #28a745 0%, #218838 100%);"
+                : "background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);";
 
         String htmlContent = "<!DOCTYPE html>"
                 + "<html lang=\"en\">"
@@ -331,9 +321,12 @@ public class BrevoEmailService {
                 + "  .status { color: white; font-size: 32px; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: center; }"
                 + "  .status-icon { margin-right: 15px; font-size: 40px; }"
                 + "  .content { padding: 35px; }"
-                + "  .card { background-color: " + (approved ? "#e8f5e9" : "#ffebee") + "; border-left: 4px solid " + statusColor + "; padding: 30px; border-radius: 0 10px 10px 0; margin-bottom: 30px; }"
-                + "  .card-title { color: " + (approved ? "#1b5e20" : "#b71c1c") + "; font-size: 22px; font-weight: 600; margin-top: 0; margin-bottom: 15px; }"
-                + "  .message { color: " + (approved ? "#1b5e20" : "#b71c1c") + "; font-size: 16px; line-height: 1.6; margin: 0; }"
+                + "  .card { background-color: " + (approved ? "#e8f5e9" : "#ffebee") + "; border-left: 4px solid "
+                + statusColor + "; padding: 30px; border-radius: 0 10px 10px 0; margin-bottom: 30px; }"
+                + "  .card-title { color: " + (approved ? "#1b5e20" : "#b71c1c")
+                + "; font-size: 22px; font-weight: 600; margin-top: 0; margin-bottom: 15px; }"
+                + "  .message { color: " + (approved ? "#1b5e20" : "#b71c1c")
+                + "; font-size: 16px; line-height: 1.6; margin: 0; }"
                 + "  .details { background-color: #f8f9fa; padding: 30px; border-radius: 10px; margin: 30px 0; }"
                 + "  .details-title { color: #2d3748; font-size: 20px; font-weight: 600; margin-top: 0; margin-bottom: 20px; }"
                 + "  .detail-row { display: flex; margin-bottom: 15px; }"
@@ -350,12 +343,14 @@ public class BrevoEmailService {
                 + "<body>"
                 + "<div class=\"container\">"
                 + "  <div class=\"header\">"
-                + "    <div class=\"status\"><span class=\"status-icon\">" + statusIcon + "</span> Admin Access " + status + "</div>"
+                + "    <div class=\"status\"><span class=\"status-icon\">" + statusIcon + "</span> Admin Access "
+                + status + "</div>"
                 + "  </div>"
                 + "  <div class=\"content\">"
                 + "    <div class=\"card\">"
                 + "      <h2 class=\"card-title\">Hello " + adminUsername + ",</h2>"
-                + "      <p class=\"message\">Your admin registration request has been <strong>" + status.toLowerCase() + "</strong>.</p>";
+                + "      <p class=\"message\">Your admin registration request has been <strong>" + status.toLowerCase()
+                + "</strong>.</p>";
         return htmlContent;
     }
 }

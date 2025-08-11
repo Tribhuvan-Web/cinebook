@@ -5,6 +5,15 @@ import com.movieDekho.MovieDekho.dtos.movie.MovieSlotResponseDTO;
 import com.movieDekho.MovieDekho.dtos.movie.MovieSlotUpdateRequest;
 import com.movieDekho.MovieDekho.exception.ResourceNotFoundException;
 import com.movieDekho.MovieDekho.service.movieService.MovieSlotService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -17,12 +26,62 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/slots")
 @AllArgsConstructor
+@Tag(name = "Movie Slot Management", 
+     description = "Complete movie slot management including scheduling, theater assignment, and time slot operations")
 public class MovieSlotController {
 
     private final MovieSlotService movieSlotService;
 
     @PostMapping("/admin/create")
-    public ResponseEntity<?> createMovieSlot(@RequestBody MovieSlotDTO request) {
+    @Operation(
+        summary = "Create movie slot (Admin only)",
+        description = "Creates a new movie slot with specified theater, timing, and pricing details. Only accessible by admin users.",
+        security = @SecurityRequirement(name = "JWT Authentication"),
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Movie slot creation details",
+            required = true,
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = MovieSlotDTO.class),
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "movieId": 1,
+                        "theaterId": 1,
+                        "slotTime": "2024-12-25T19:30:00",
+                        "price": 250.0,
+                        "availableSeats": 100
+                    }
+                    """
+                )
+            )
+        )
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "Movie slot created successfully",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = MovieSlotResponseDTO.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Movie or theater not found",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "\"Movie not found\""))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request data",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "\"Invalid slot time\""))
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Error creating movie slot",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "\"Error creating slot: [error details]\""))
+        )
+    })
+    public ResponseEntity<?> createMovieSlot(
+        @Parameter(description = "Movie slot creation details", required = true)
+        @RequestBody MovieSlotDTO request) {
         try {
             MovieSlotResponseDTO response = movieSlotService.createMovieSlot(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
