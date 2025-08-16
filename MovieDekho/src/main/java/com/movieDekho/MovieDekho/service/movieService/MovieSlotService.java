@@ -66,7 +66,6 @@ public class MovieSlotService {
         MovieSlot slot = movieSlotRepository.findBySlotId(slotId)
                 .orElseThrow(() -> new ResourceNotFoundException("Movie slot not found with ID: " + slotId));
 
-        // Validate show date against movie's date range if provided
         if (request.getShowDate() != null) {
             LocalDate showDate = request.getShowDate();
             AvailableMovie movie = slot.getMovie();
@@ -77,7 +76,6 @@ public class MovieSlotService {
             slot.setShowDate(showDate);
         }
 
-        // Update fields if provided
         if (request.getStartTime() != null) slot.setStartTime(request.getStartTime());
         if (request.getEndTime() != null) slot.setEndTime(request.getEndTime());
         if (request.getTheaterName() != null) slot.setTheaterName(request.getTheaterName());

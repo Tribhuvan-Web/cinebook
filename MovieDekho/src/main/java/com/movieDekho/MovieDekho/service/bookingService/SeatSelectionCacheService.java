@@ -18,8 +18,8 @@ public class SeatSelectionCacheService {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     public SeatSelectionCacheService() {
-        // Clean up expired entries every 5 minutes
-        scheduler.scheduleAtFixedRate(this::cleanupExpiredEntries, 5, 5, TimeUnit.MINUTES);
+        //Setting time for delete entry is 10min
+        scheduler.scheduleAtFixedRate(this::cleanupExpiredEntries, 10,10, TimeUnit.MINUTES);
     }
 
     /**

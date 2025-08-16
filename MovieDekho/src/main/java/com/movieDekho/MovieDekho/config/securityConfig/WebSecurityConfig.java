@@ -52,9 +52,8 @@ public class WebSecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         auth -> auth
-                                // Public authentication endpoints
                                 .requestMatchers("/api/auth/**").permitAll()
-                                
+
                                 // Swagger UI endpoints
                                 .requestMatchers("/api/swagger-ui.html").permitAll()
                                 .requestMatchers("/api/swagger-ui/**").permitAll()
@@ -69,10 +68,10 @@ public class WebSecurityConfig {
                                 .requestMatchers("/api/super-admin/**").permitAll()
 
                                 // Admin endpoints - must be defined before general patterns
-                                .requestMatchers("/movies/admin/**").hasRole("USER")
-                                .requestMatchers("/api/admin/**").hasRole("USER")
-                                .requestMatchers("/api/seats/admin/**").hasRole("USER")
-                                .requestMatchers("/api/slots/admin/**").hasRole("USER")
+                                .requestMatchers("/movies/admin/**").hasRole("ADMIN")   
+                                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/api/seats/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/api/slots/admin/**").hasRole("ADMIN")
 
                                 // Public movie endpoints
                                 .requestMatchers("/movies/recent").permitAll()
@@ -88,17 +87,29 @@ public class WebSecurityConfig {
                                 .requestMatchers("/api/slots/date-range").permitAll()
                                 .requestMatchers("/api/slots/search").permitAll()
 
+                                // Public seat viewing endpoints - anyone can view seats
+                                .requestMatchers("/api/seats/slot/**").permitAll()
+                                .requestMatchers("/api/seats/{seatId}").permitAll()
+                                .requestMatchers("/api/seats/{seatId}/availability").permitAll()
+
                                 // User endpoints
                                 .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
 
-                                // Seat endpoints for authenticated users
-                                .requestMatchers("/api/seats/slot/**").hasAnyRole("USER", "ADMIN")
-                                .requestMatchers("/api/seats/{seatId}").hasAnyRole("USER", "ADMIN")
-                                .requestMatchers("/api/seats/{seatId}/availability").hasAnyRole("USER", "ADMIN")
-
                                 // Booking endpoints
                                 .requestMatchers("/api/bookings/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/api/bookings/**").hasRole("USER")
+                                
+                                // PUBLIC booking endpoints (no auth required) - seat selection & availability
+                                .requestMatchers("/api/bookings/select-seats").permitAll()
+                                .requestMatchers("/api/bookings/seats/check-availability").permitAll()
+                                .requestMatchers("/api/bookings/release-seats").permitAll()
+                                
+                                // PROTECTED booking endpoints (auth required) - payment & user operations
+                                .requestMatchers("/api/bookings/payment").hasRole("USER")
+                                .requestMatchers("/api/bookings/user/**").hasRole("USER")
+                                .requestMatchers("/api/bookings/{bookingId}").hasRole("USER")
+                                .requestMatchers("/api/bookings/{bookingId}/cancel").hasRole("USER")
+                                .requestMatchers("/api/bookings/**").hasRole("USER") // Catch-all for any remaining booking endpoints
+                                
                                 // All other requests require authentication
                                 .anyRequest().authenticated());
 

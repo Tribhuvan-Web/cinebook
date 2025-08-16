@@ -158,18 +158,18 @@ public class SuperAdminController {
     @PostMapping("/verify-otp/{userId}")
     @Operation(
         summary = "Verify OTP and approve admin request",
-        description = "Verifies the 6-digit OTP sent to super admin email and approves the user as admin if OTP is valid. Returns success/error HTML page."
+        description = "Verifies the 6-digit OTP sent to super admin email and approves the user as admin if OTP is valid. If OTP is expired, automatically resends the admin approval email to give super admin another chance to verify. Returns success/error HTML page."
     )
     @ApiResponses(value = {
         @ApiResponse(
             responseCode = "200",
-            description = "OTP verified successfully, admin approved",
-            content = @Content(mediaType = "text/html", examples = @ExampleObject(value = "Success page confirming admin approval"))
+            description = "OTP verified successfully and admin approved, OR OTP expired and new approval email sent",
+            content = @Content(mediaType = "text/html", examples = @ExampleObject(value = "Success page confirming admin approval or email resent notification"))
         ),
         @ApiResponse(
             responseCode = "400",
-            description = "Invalid OTP or OTP expired",
-            content = @Content(mediaType = "text/html", examples = @ExampleObject(value = "Error page with OTP validation failure"))
+            description = "Invalid OTP (not expired) or system error during resend",
+            content = @Content(mediaType = "text/html", examples = @ExampleObject(value = "Error page with OTP validation failure or resend failure"))
         ),
         @ApiResponse(
             responseCode = "500",
@@ -187,10 +187,18 @@ public class SuperAdminController {
             String storedOtp = otpStorage.get(userId);
 
             if (storedOtp == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .header("Content-Type", "text/html")
-                        .body(createErrorPage(
-                                "OTP expired or invalid. Please try the approval link again."));
+                // OTP expired or invalid - resend admin registration notification
+                try {
+                    adminApprovalService.resendAdminRegistrationNotification(userId);
+                    return ResponseEntity.status(HttpStatus.OK)
+                            .header("Content-Type", "text/html")
+                            .body(createResendSuccessPage(userId));
+                } catch (Exception e) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .header("Content-Type", "text/html")
+                            .body(createErrorPage(
+                                    "OTP expired and unable to resend notification. Please contact support."));
+                }
             }
 
             if (!storedOtp.equals(providedOtp)) {
@@ -634,5 +642,51 @@ public class SuperAdminController {
                         </body>
                         </html>
                         """;
+    }
+
+    private String createResendSuccessPage(Long userId) {
+        return "<!DOCTYPE html>"
+                + "<html>"
+                + "<head>"
+                + "    <title>Email Resent - CineBook</title>"
+                + "    <meta charset=\"UTF-8\">"
+                + "    <style>"
+                + "        body { font-family: Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 50px; }"
+                + "        .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }"
+                + "        .success { color: #28a745; font-size: 48px; margin-bottom: 20px; }"
+                + "        .title { color: #333; font-size: 24px; margin-bottom: 15px; }"
+                + "        .details { color: #666; font-size: 16px; line-height: 1.6; }"
+                + "        .info-box { background-color: #e6f7ff; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #1890ff; }"
+                + "    </style>"
+                + "</head>"
+                + "<body>"
+                + "    <div class=\"container\">"
+                + "        <div class=\"success\">📧</div>"
+                + "        <h1 class=\"title\">New Approval Email Sent!</h1>"
+                + "        "
+                + "        <div class=\"info-box\">"
+                + "            <strong>🔄 Admin Request Resent</strong><br>"
+                + "            User ID: <strong>" + userId + "</strong><br>"
+                + "            Status: <strong>Email Notification Resent</strong><br>"
+                + "            Timestamp: <strong>" + new java.util.Date() + "</strong>"
+                + "        </div>"
+                + ""
+                + "        <div class=\"details\">"
+                + "            ✅ A fresh admin approval email has been sent to the super admin<br>"
+                + "            ✅ The super admin will receive a new notification with approval links<br>"
+                + "            ✅ This gives another opportunity to verify and approve the admin request<br><br>"
+                + "            "
+                + "            <strong>What happens next:</strong><br>"
+                + "            • Super admin will receive a new email notification<br>"
+                + "            • They can click the approval link to proceed<br>"
+                + "            • User will be notified once the approval is processed"
+                + "        </div>"
+                + ""
+                + "        <div style=\"margin-top: 30px; color: #888;\">"
+                + "            The super admin has been notified again. Please wait for their response."
+                + "        </div>"
+                + "    </div>"
+                + "</body>"
+                + "</html>";
     }
 }

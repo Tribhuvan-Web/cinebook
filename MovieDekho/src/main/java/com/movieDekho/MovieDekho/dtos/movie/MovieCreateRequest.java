@@ -12,6 +12,7 @@ public class MovieCreateRequest {
     private String certification;
     private String thumbnail;
     private String trailer;
+    private String language;
     private String genre;
     private LocalDate startDate;
     private LocalDate endDate;

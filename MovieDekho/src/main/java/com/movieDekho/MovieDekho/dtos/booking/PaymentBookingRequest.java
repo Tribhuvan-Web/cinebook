@@ -1,10 +1,14 @@
 package com.movieDekho.MovieDekho.dtos.booking;
 
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -12,6 +16,13 @@ public class PaymentBookingRequest {
 
     @NotNull(message = "Slot ID is required")
     private Long slotId;
+    
+    // NEW FIELDS for frontend-based seat selection
+    @NotEmpty(message = "At least one seat must be selected")
+    private List<String> seatNumbers;
+    
+    @Positive(message = "Total amount must be positive")
+    private Double totalAmount;
 
     @NotNull(message = "Payment method is required")
     private String paymentMethod = "MOCK_PAYMENT";

@@ -10,6 +10,8 @@ import java.util.List;
 public class SeatSelectionResponse {
     private Long slotId;
     private List<String> seatNumbers;
+    private Double ticketFee;
+    private Double convenienceFee;
     private Double totalAmount;
     private String movieTitle;
     private String movieDescription;
@@ -23,7 +25,6 @@ public class SeatSelectionResponse {
     @NoArgsConstructor
     public static class SeatDetails {
         private String seatNumber;
-        private String seatType;
         private Double price;
     }
 }

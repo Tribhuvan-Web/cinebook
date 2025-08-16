@@ -51,4 +51,25 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     // Check if seat is already booked for a slot
     @Query("SELECT COUNT(b) > 0 FROM Booking b WHERE b.slot = :slot AND :seatNumber MEMBER OF b.seatNumbers AND b.status = com.movieDekho.MovieDekho.models.Booking$BookingStatus.CONFIRMED")
     boolean isSeatBookedForSlot(@Param("slot") MovieSlot slot, @Param("seatNumber") String seatNumber);
+    
+    // Find all bookings with proper fetch joins to avoid lazy loading issues
+    @Query("SELECT b FROM Booking b JOIN FETCH b.slot s JOIN FETCH s.movie ORDER BY b.bookingTime DESC")
+    List<Booking> findAllWithDetails();
+    
+    // Find bookings by user email with fetch joins
+    @Query("SELECT b FROM Booking b JOIN FETCH b.slot s JOIN FETCH s.movie WHERE b.userEmail = :userEmail ORDER BY b.bookingTime DESC")
+    List<Booking> findByUserEmailWithDetails(@Param("userEmail") String userEmail);
+    
+    // Find booking by ID with fetch joins
+    @Query("SELECT b FROM Booking b JOIN FETCH b.slot s JOIN FETCH s.movie WHERE b.bookingId = :bookingId")
+    Optional<Booking> findByIdWithDetails(@Param("bookingId") Long bookingId);
+    
+    // Ticket verification related methods
+    Optional<Booking> findByQrCode(String qrCode);
+    
+    @Query("SELECT b FROM Booking b WHERE b.isVerified = :isVerified")
+    List<Booking> findByIsVerified(Boolean isVerified);
+    
+    // Find booking by verification token
+    Optional<Booking> findByVerificationToken(String verificationToken);
 }

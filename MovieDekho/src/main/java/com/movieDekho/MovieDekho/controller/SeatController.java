@@ -57,7 +57,7 @@ public class SeatController {
         }
     }
 
-    @GetMapping("/admin/slot/{slotId}")
+    @GetMapping("/slot/{slotId}")
     public ResponseEntity<?> getAllSeatsForSlot(@PathVariable Long slotId) {
         try {
             List<SeatResponse> response = seatService.getAllSeatsForSlot(slotId);
@@ -185,7 +185,7 @@ public class SeatController {
     /**
      * Get all seats for a slot with booking status (User)
      */
-    @GetMapping("/slot/{slotId}")
+    @GetMapping("/slot/{slotId}/status")
     public ResponseEntity<?> getAllSeatsWithStatus(@PathVariable Long slotId) {
         try {
             List<SeatResponse> response = seatService.getAllSeatsWithStatus(slotId);

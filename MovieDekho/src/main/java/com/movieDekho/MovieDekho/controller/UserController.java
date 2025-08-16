@@ -5,6 +5,7 @@ import com.movieDekho.MovieDekho.dtos.movie.MovieResponseDTO;
 import com.movieDekho.MovieDekho.dtos.user.UserResponseDTO;
 import com.movieDekho.MovieDekho.models.User;
 import com.movieDekho.MovieDekho.repository.UserRepository;
+import com.movieDekho.MovieDekho.repository.BookingRepository;
 import com.movieDekho.MovieDekho.service.userService.FavoritesService;
 import com.movieDekho.MovieDekho.util.UserMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,6 +37,7 @@ import java.util.Optional;
 public class UserController {
 
     private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final FavoritesService favoritesService;
@@ -122,6 +124,11 @@ public class UserController {
         @RequestBody UserProfileUpdateRequest request) {
         try {
             String username = extractUsernameFromToken(authHeader);
+            if (!isValidUsername(username)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Invalid token or user identification");
+            }
+            
             Optional<User> userOpt = userRepository.findByEmailOrPhone(username);
 
             if (userOpt.isPresent()) {
@@ -451,14 +458,68 @@ public class UserController {
     public ResponseEntity<?> deleteUser(
         @Parameter(description = "JWT authentication token", required = true, example = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
         @RequestHeader("Authorization") String authHeader) {
-        Optional<User> userOpt = userRepository.findByEmailOrPhone(extractUsernameFromToken(authHeader));
-        userRepository.deleteById(userOpt.get().getId());
-        return ResponseEntity.ok("User deleted successfully");
+        try {
+            // Validate auth header
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Invalid or missing Authorization header");
+            }
+
+            String username = extractUsernameFromToken(authHeader);
+            if (!isValidUsername(username)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Invalid token or user identification");
+            }
+
+            Optional<User> userOpt = userRepository.findByEmailOrPhone(username);
+            if (!userOpt.isPresent()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("User not found");
+            }
+
+            User user = userOpt.get();
+            
+            // Delete related bookings first to avoid foreign key constraint violation
+            try {
+                bookingRepository.deleteAll(bookingRepository.findByUser(user));
+            } catch (Exception e) {
+                // Log the error but continue - in case there are no bookings
+                System.out.println("Note: No bookings found to delete for user: " + user.getId());
+            }
+            
+            // Now delete the user
+            userRepository.deleteById(user.getId());
+            
+            return ResponseEntity.ok("User and all associated data deleted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error deleting user: " + e.getMessage());
+        }
     }
 
     public String extractUsernameFromToken(String authHeader) {
-        String token = authHeader.substring(7);
-        return jwtUtils.getNameFromJwt(token);
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ") || authHeader.length() <= 7) {
+                return null;
+            }
+            String token = authHeader.substring(7);
+            if (token.trim().isEmpty()) {
+                return null;
+            }
+            return jwtUtils.getNameFromJwt(token);
+        } catch (Exception e) {
+            // Log the error and return null for invalid tokens
+            System.err.println("Error extracting username from token: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Helper method to validate username extracted from token
+     */
+    private boolean isValidUsername(String username) {
+        return username != null && !username.trim().isEmpty() && 
+               !"undefined".equals(username) && !"null".equals(username);
     }
 
     @Data

@@ -14,7 +14,7 @@ import java.time.LocalDate;
 @Table(name = "available_movie")
 @Data
 @NoArgsConstructor
-@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class AvailableMovie {
 
     @Id
@@ -28,7 +28,7 @@ public class AvailableMovie {
     private String description;
     private String certification;
     private String thumbnail;
-
+    private String language;
     private LocalDate startDate;
     private LocalDate endDate;
     private String trailer;

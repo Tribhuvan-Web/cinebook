@@ -2,6 +2,7 @@ package com.movieDekho.MovieDekho.dtos.movie;
 
 import com.movieDekho.MovieDekho.models.MovieSlot;
 import lombok.Data;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -15,6 +16,7 @@ public class MovieSlotResponseDTO {
     private String screenType;
     private int totalSeats;
     private int availableSeats;
+    private Long movieId;
 
     public static MovieSlotResponseDTO fromMovieSlot(MovieSlot slot) {
         MovieSlotResponseDTO dto = new MovieSlotResponseDTO();
@@ -26,6 +28,7 @@ public class MovieSlotResponseDTO {
         dto.setScreenType(slot.getScreenType());
         dto.setTotalSeats(slot.getTotalSeats());
         dto.setAvailableSeats(slot.getAvailableSeats());
+        dto.setMovieId(slot.getMovie().getId());
         return dto;
     }
 }

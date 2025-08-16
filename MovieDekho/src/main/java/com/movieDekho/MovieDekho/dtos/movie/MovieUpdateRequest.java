@@ -10,6 +10,7 @@ public class MovieUpdateRequest {
     private String duration;
     private String description;
     private String certification;
+    private String language;
     private String thumbnail;
     private String trailer;
     private String genre;

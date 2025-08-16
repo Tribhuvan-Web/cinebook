@@ -18,7 +18,7 @@ public class Seat {
     @JoinColumn(name = "slot_id", nullable = false)
     private MovieSlot slot;
 
-    private String seatNumber; // "A1", "B5", etc.
+    private String seatNumber;
     private boolean isBooked;
     private double price;
 }

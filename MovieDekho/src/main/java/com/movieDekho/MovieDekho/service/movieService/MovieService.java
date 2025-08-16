@@ -93,6 +93,7 @@ public class MovieService {
         movie.setDescription(request.getDescription());
         movie.setCertification(request.getCertification());
         movie.setThumbnail(request.getThumbnail());
+        movie.setLanguage(request.getLanguage());
         movie.setTrailer(request.getTrailer());
         movie.setGenre(request.getGenre());
         movie.setStartDate(request.getStartDate());
@@ -120,6 +121,8 @@ public class MovieService {
             movie.setDescription(request.getDescription());
         if (request.getCertification() != null)
             movie.setCertification(request.getCertification());
+        if (request.getLanguage() != null)
+            movie.setLanguage(request.getLanguage());
         if (request.getThumbnail() != null)
             movie.setThumbnail(request.getThumbnail());
         if (request.getTrailer() != null)

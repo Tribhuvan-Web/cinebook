@@ -18,5 +18,6 @@ public class MovieSlotUpdateRequest {
     private String theaterName;
     private String screenType;
     private int totalSeats;
+    private Long movieId;
     private int availableSeats;
 }

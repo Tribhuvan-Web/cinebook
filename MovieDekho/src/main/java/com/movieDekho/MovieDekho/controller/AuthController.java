@@ -5,6 +5,7 @@ import com.movieDekho.MovieDekho.config.jwtUtils.JwtUtils;
 import com.movieDekho.MovieDekho.dtos.user.*;
 import com.movieDekho.MovieDekho.exception.UserDetailsAlreadyExist;
 import com.movieDekho.MovieDekho.models.User;
+import com.movieDekho.MovieDekho.repository.UserRepository;
 import com.movieDekho.MovieDekho.service.otpservice.BrevoEmailService;
 import com.movieDekho.MovieDekho.service.otpservice.OtpService;
 import com.movieDekho.MovieDekho.service.userService.UserService;
@@ -18,10 +19,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
@@ -34,10 +36,13 @@ import java.util.Map;
 @Tag(name = "Authentication & Authorization", description = "Complete authentication system including user registration, login, OTP verification, password reset, and admin approval workflows")
 public class AuthController {
 
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+
     private final UserService userService;
     private final JwtUtils jwtUtils;
     private final OtpService otpService;
     private final BrevoEmailService emailService;
+    private final UserRepository userRepository;
 
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Creates a new user account with USER role. User will be immediately activated and can start using the application.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "User registration details", required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = RegisterUserDTO.class), examples = @ExampleObject(name = "User Registration Example", value = """
@@ -89,6 +94,60 @@ public class AuthController {
     public ResponseEntity<?> saveAdmin(
             @Parameter(description = "Admin registration information", required = true) @RequestBody RegisterUserDTO user) {
         try {
+            logger.info("Admin registration request received for email: {}", user.getEmail());
+
+            User existing = null;
+            if (user.getEmail() != null) {
+                existing = userRepository.findByEmail(user.getEmail()).orElse(null);
+            }
+            if (existing == null && user.getPhone() != null) {
+                existing = userRepository.findByPhone(user.getPhone()).orElse(null);
+            }
+
+            if (existing != null) {
+                logger.info("Existing user found: {}, Role: {}, IsApproved: {}",
+                        existing.getUsername(), existing.getRole(), existing.getIsApproved());
+
+                // If user is still pending admin, resend notification instead of error
+                if ("PENDING_ADMIN".equals(existing.getRole()) && Boolean.FALSE.equals(existing.getIsApproved())) {
+                    logger.info("Resending admin registration notification for user: {} (ID: {})",
+                            existing.getUsername(), existing.getId());
+
+                    try {
+                        emailService.sendAdminRegistrationNotification(
+                                existing.getUsername(),
+                                existing.getEmail(),
+                                existing.getPhone(),
+                                existing.getId());
+                        logger.info("Admin registration notification resent successfully for user: {}",
+                                existing.getUsername());
+
+                        return ResponseEntity.ok(Map.of(
+                                "message",
+                                "Admin verification email resent successfully. Please wait for approval from the super admin.",
+                                "status", "PENDING_ADMIN",
+                                "userId", existing.getId()));
+                    } catch (Exception emailError) {
+                        logger.error("Failed to resend admin registration notification for user: {}, Error: {}",
+                                existing.getUsername(), emailError.getMessage(), emailError);
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body(Map.of("error", "Failed to resend verification email. Please try again later."));
+                    }
+                }
+                // If already approved admin
+                if ("ROLE_ADMIN".equals(existing.getRole()) && Boolean.TRUE.equals(existing.getIsApproved())) {
+                    logger.warn("User {} is already an approved admin", existing.getUsername());
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body(Map.of("error", "User is already an approved admin"));
+                }
+                // Any other existing account scenario
+                logger.warn("User {} exists but not eligible for admin resend. Role: {}, IsApproved: {}",
+                        existing.getUsername(), existing.getRole(), existing.getIsApproved());
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("error", "Account already exists and is not eligible for admin resend"));
+            }
+
+            logger.info("Creating new admin request for user: {}", user.getUsername());
             User newUser = new User();
             newUser.setUsername(user.getUsername());
             newUser.setPassword(user.getPassword());
@@ -100,12 +159,23 @@ public class AuthController {
             newUser.setRequestedAt(java.time.LocalDateTime.now());
 
             User savedUser = userService.registerUser(newUser);
+            logger.info("New admin user saved with ID: {}", savedUser.getId());
 
-            emailService.sendAdminRegistrationNotification(
-                    savedUser.getUsername(),
-                    savedUser.getEmail(),
-                    savedUser.getPhone(),
-                    savedUser.getId());
+            try {
+                emailService.sendAdminRegistrationNotification(
+                        savedUser.getUsername(),
+                        savedUser.getEmail(),
+                        savedUser.getPhone(),
+                        savedUser.getId());
+                logger.info("Admin registration notification sent successfully for new user: {}",
+                        savedUser.getUsername());
+            } catch (Exception emailError) {
+                logger.error("Failed to send admin registration notification for new user: {}, Error: {}",
+                        savedUser.getUsername(), emailError.getMessage(), emailError);
+                // Still return success since user was created, but mention email issue
+                return ResponseEntity.ok(Map.of("message",
+                        "Admin registration request submitted, but notification email failed. Please contact support."));
+            }
 
             return ResponseEntity.ok(Map.of("message",
                     "Admin registration request submitted. Please wait for approval from the super admin."));
@@ -189,7 +259,7 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found"));
             }
 
-            String otp = otpService.generateOtp(targetEmail);
+            String otp = otpService.generateLoginOtp(targetEmail);
             emailService.sendOtpEmail(targetEmail, otp);
 
             return ResponseEntity.ok(Map.of("message", "OTP sent successfully"));
@@ -233,7 +303,7 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found"));
             }
 
-            String otp = otpService.generateOtp(targetEmail);
+            String otp = otpService.generatePasswordResetOtp(targetEmail);
             emailService.sendPasswordResetEmail(targetEmail, otp);
 
             return ResponseEntity.ok(Map.of("message", "Password reset OTP sent successfully"));
@@ -284,7 +354,7 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Must provide email or phone number"));
             }
 
-            if (!otpService.validateOtp(targetEmail, request.getOtp())) {
+            if (!otpService.validateLoginOtp(targetEmail, request.getOtp())) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid OTP"));
             }
 
@@ -331,7 +401,7 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Must provide email or phone number"));
             }
 
-            if (!otpService.validateOtp(targetEmail, request.getOtp())) {
+            if (!otpService.validatePasswordResetOtp(targetEmail, request.getOtp())) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid OTP"));
             }
 

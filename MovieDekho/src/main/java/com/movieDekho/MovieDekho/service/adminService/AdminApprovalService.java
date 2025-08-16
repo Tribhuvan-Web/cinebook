@@ -80,4 +80,32 @@ public class AdminApprovalService {
         
         logger.info("User successfully deleted: {} (ID: {})", user.getUsername(), userId);
     }
+
+    public void resendAdminRegistrationNotification(Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("User not found with ID: " + userId);
+        }
+
+        User user = userOpt.get();
+        
+        if (!"PENDING_ADMIN".equals(user.getRole())) {
+            throw new RuntimeException("User is not in pending admin state");
+        }
+
+        // Resend the admin registration notification
+        emailService.sendAdminRegistrationNotification(
+                user.getUsername(),
+                user.getEmail(),
+                user.getPhone(),
+                userId);
+
+        logger.info("Resent admin registration notification for user: {} (ID: {})", user.getUsername(), userId);
+    }
+
+    public String getUserPhoneById(Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        return userOpt.map(User::getPhone).orElse(null);
+    }
 }

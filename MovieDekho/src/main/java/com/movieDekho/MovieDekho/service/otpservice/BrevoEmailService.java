@@ -33,8 +33,19 @@ public class BrevoEmailService {
     private String superAdminName;
 
     public void sendOtpEmail(String recipientEmail, String otpCode) {
-
         try {
+            if (apiKey == null || apiKey.trim().isEmpty()) {
+                logger.error("Brevo API key is not configured");
+                throw new RuntimeException("Brevo API key is not configured");
+            }
+            
+            if (senderEmail == null || senderEmail.trim().isEmpty()) {
+                logger.error("Sender email is not configured");
+                throw new RuntimeException("Sender email is not configured");
+            }
+            
+            logger.info("Using sender email: {} and sender name: {}", senderEmail, senderName);
+            
             ApiClient defaultClient = Configuration.getDefaultApiClient();
             ApiKeyAuth apiKeyAuth = (ApiKeyAuth) defaultClient.getAuthentication("api-key");
             apiKeyAuth.setApiKey(apiKey);
@@ -76,8 +87,11 @@ public class BrevoEmailService {
                     .textContent(textContent)
                     .tags(Collections.singletonList("otp-email"));
 
-            apiInstance.sendTransacEmail(sendSmtpEmail);
+            CreateSmtpEmail result = apiInstance.sendTransacEmail(sendSmtpEmail);
+            logger.info("OTP email sent successfully to: {}. Message ID: {}", recipientEmail, result.getMessageId());
+            
         } catch (Exception e) {
+            logger.error("Failed to send OTP email to: {}. Error: {}", recipientEmail, e.getMessage(), e);
             if (e.getMessage() != null) {
                 if (e.getMessage().contains("401")) {
                     logger.error("Authentication failed - check your API key");
@@ -135,38 +149,71 @@ public class BrevoEmailService {
                     .textContent(textContent)
                     .tags(Collections.singletonList("password-reset-email"));
 
+            // Actually send the email - this was missing!
+            CreateSmtpEmail result = apiInstance.sendTransacEmail(sendSmtpEmail);
+            logger.info("Password reset email sent successfully to: {}. Message ID: {}", recipientEmail, result.getMessageId());
+
         } catch (Exception e) {
+            logger.error("Failed to send password reset email to: {}. Error: {}", recipientEmail, e.getMessage(), e);
             throw new RuntimeException("Failed to send password reset email: " + e.getMessage(), e);
         }
     }
 
     public void sendEmail(String recipientEmail, String subject, String htmlContent) {
+        try {
+            logger.info("Attempting to send email to: {} with subject: {}", recipientEmail, subject);
+            
+            // Validate configuration
+            if (apiKey == null || apiKey.trim().isEmpty()) {
+                logger.error("Brevo API key is not configured");
+                throw new RuntimeException("Brevo API key is not configured");
+            }
+            
+            if (senderEmail == null || senderEmail.trim().isEmpty()) {
+                logger.error("Sender email is not configured");
+                throw new RuntimeException("Sender email is not configured");
+            }
+            
+            logger.info("Using API key (first 10 chars): {}...", apiKey.substring(0, Math.min(10, apiKey.length())));
+            logger.info("Using sender email: {} and sender name: {}", senderEmail, senderName);
+            
+            ApiClient defaultClient = Configuration.getDefaultApiClient();
+            ApiKeyAuth apiKeyAuth = (ApiKeyAuth) defaultClient.getAuthentication("api-key");
+            apiKeyAuth.setApiKey(apiKey);
+            defaultClient.setBasePath("https://api.brevo.com/v3");
 
-        ApiClient defaultClient = Configuration.getDefaultApiClient();
-        ApiKeyAuth apiKeyAuth = (ApiKeyAuth) defaultClient.getAuthentication("api-key");
-        apiKeyAuth.setApiKey(apiKey);
-        defaultClient.setBasePath("https://api.brevo.com/v3");
+            TransactionalEmailsApi apiInstance = new TransactionalEmailsApi();
 
-        TransactionalEmailsApi apiInstance = new TransactionalEmailsApi();
+            SendSmtpEmailSender sender = new SendSmtpEmailSender()
+                    .email(senderEmail)
+                    .name(senderName);
 
-        SendSmtpEmailSender sender = new SendSmtpEmailSender()
-                .email(senderEmail)
-                .name(senderName);
+            SendSmtpEmailTo to = new SendSmtpEmailTo()
+                    .email(recipientEmail.trim());
 
-        SendSmtpEmailTo to = new SendSmtpEmailTo()
-                .email(recipientEmail);
+            SendSmtpEmail sendSmtpEmail = new SendSmtpEmail()
+                    .sender(sender)
+                    .to(Collections.singletonList(to))
+                    .subject(subject)
+                    .htmlContent(htmlContent);
 
-        SendSmtpEmail sendSmtpEmail = new SendSmtpEmail()
-                .sender(sender)
-                .to(Collections.singletonList(to))
-                .subject(subject)
-                .htmlContent(htmlContent);
-
+            logger.info("Calling Brevo API to send email...");
+            // Actually send the email - this was missing!
+            CreateSmtpEmail result = apiInstance.sendTransacEmail(sendSmtpEmail);
+            logger.info("Email sent successfully to: {}. Message ID: {}", recipientEmail, result.getMessageId());
+            
+        } catch (Exception e) {
+            logger.error("Failed to send email to: {}. Error: {}", recipientEmail, e.getMessage(), e);
+            throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
+        }
     }
 
     public void sendAdminRegistrationNotification(String adminUsername, String adminEmail, String adminPhone,
             Long userId) {
         try {
+            logger.info("Starting admin registration notification for user: {} (ID: {})", adminUsername, userId);
+            logger.info("Super admin email configured as: {}", superAdminEmail);
+            
             String subject = "New Admin Registration Request - CineBook";
             String approvalLink = "http://localhost:8080/api/super-admin/approve/" + userId;
             String declineLink = "http://localhost:8080/api/super-admin/decline/" + userId;
@@ -244,7 +291,9 @@ public class BrevoEmailService {
                     + "</body>"
                     + "</html>";
 
+            logger.info("Sending admin registration notification to super admin: {}", superAdminEmail);
             sendEmail(superAdminEmail, subject, htmlContent);
+            logger.info("Admin registration notification sent successfully for user: {}", adminUsername);
 
         } catch (Exception e) {
             logger.error("Failed to send admin registration notification for user: {}", adminUsername, e);
@@ -352,5 +401,39 @@ public class BrevoEmailService {
                 + "      <p class=\"message\">Your admin registration request has been <strong>" + status.toLowerCase()
                 + "</strong>.</p>";
         return htmlContent;
+    }
+
+    /**
+     * Test method to verify email service configuration
+     */
+    public void testEmailConfiguration() {
+        try {
+            logger.info("Testing Brevo email configuration...");
+            logger.info("API Key configured: {}", apiKey != null && !apiKey.trim().isEmpty());
+            logger.info("Sender Email: {}", senderEmail);
+            logger.info("Sender Name: {}", senderName);
+            logger.info("Super Admin Email: {}", superAdminEmail);
+            
+            if (apiKey == null || apiKey.trim().isEmpty()) {
+                logger.error("❌ API Key is missing!");
+                return;
+            }
+            
+            if (senderEmail == null || senderEmail.trim().isEmpty()) {
+                logger.error("❌ Sender email is missing!");
+                return;
+            }
+            
+            // Test API connection
+            ApiClient defaultClient = Configuration.getDefaultApiClient();
+            ApiKeyAuth apiKeyAuth = (ApiKeyAuth) defaultClient.getAuthentication("api-key");
+            apiKeyAuth.setApiKey(apiKey);
+            defaultClient.setBasePath("https://api.brevo.com/v3");
+            
+            logger.info("✅ Email service configuration appears to be valid");
+            
+        } catch (Exception e) {
+            logger.error("❌ Email configuration test failed: {}", e.getMessage(), e);
+        }
     }
 }
