@@ -5,11 +5,8 @@ import com.movieDekho.MovieDekho.dtos.movie.MovieResponseDTO;
 import com.movieDekho.MovieDekho.dtos.movie.MovieUpdateRequest;
 import com.movieDekho.MovieDekho.dtos.user.UserResponseDTO;
 import com.movieDekho.MovieDekho.exception.ResourceNotFoundException;
-import com.movieDekho.MovieDekho.models.User;
 import com.movieDekho.MovieDekho.repository.UserRepository;
-import com.movieDekho.MovieDekho.repository.BookingRepository;
 import com.movieDekho.MovieDekho.service.movieService.MovieService;
-import com.movieDekho.MovieDekho.util.UserMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,17 +18,12 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RequestMapping("/movies")
 @RestController
@@ -42,7 +34,6 @@ public class MovieController {
 
     private final MovieService movieService;
     private final UserRepository userRepository;
-    private final BookingRepository bookingRepository;
 
     /*    USER ENDPOINTS    */
 
