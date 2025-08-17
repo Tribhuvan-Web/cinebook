@@ -22,7 +22,7 @@
 | Auth         | JWT|
 | Database     | MySQL (per service), JPA |
 | DevOps       | Docker, Docker Compose |
-| Tools        | Postman, Git, VS Code |
+| Tools        | Postman, Git, VS Code , Intellij |
 
 ---
 
