@@ -1,0 +1,36 @@
+package com.movieDekho.MovieDekho.dtos.movie;
+
+import com.movieDekho.MovieDekho.models.MovieSlot;
+import lombok.Data;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+@Data
+public class MovieSlotResponseDTO {
+    private Long slotId;
+    private LocalDate showDate;
+    private LocalTime startTime;
+    private LocalTime endTime;
+    private String theaterName;
+    private String screenType;
+    private String location;
+    private int totalSeats;
+    private int availableSeats;
+    private Long movieId;
+
+    public static MovieSlotResponseDTO fromMovieSlot(MovieSlot slot) {
+        MovieSlotResponseDTO dto = new MovieSlotResponseDTO();
+        dto.setSlotId(slot.getSlotId());
+        dto.setShowDate(slot.getShowDate());
+        dto.setStartTime(slot.getStartTime());
+        dto.setEndTime(slot.getEndTime());
+        dto.setLocation(slot.getLocation());
+        dto.setTheaterName(slot.getTheaterName());
+        dto.setScreenType(slot.getScreenType());
+        dto.setTotalSeats(slot.getTotalSeats());
+        dto.setAvailableSeats(slot.getAvailableSeats());
+        dto.setMovieId(slot.getMovie().getId());
+        return dto;
+    }
+}

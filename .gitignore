@@ -1,0 +1,31 @@
+# Ignore application configuration files
+/src/main/resources/application.properties
+/src/main/resources/application*.yml
+/src/main/resources/application*.yaml
+
+# Ignore sensitive data files
+*.keystore
+*.jks
+*.p12
+*.cert
+*.key
+
+# Ignore IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Ignore build directories
+target/
+build/
+out/
+bin/
+
+# Ignore log files
+*.log
+logs/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
