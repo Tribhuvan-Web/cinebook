@@ -2,23 +2,29 @@ package com.movieDekho.MovieDekho.service.adminService;
 
 import com.movieDekho.MovieDekho.models.User;
 import com.movieDekho.MovieDekho.repository.UserRepository;
+import com.movieDekho.MovieDekho.service.emailService.ResilientEmailService;
 import com.movieDekho.MovieDekho.service.otpservice.BrevoEmailService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AdminApprovalService {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminApprovalService.class);
 
     private final UserRepository userRepository;
-    private final BrevoEmailService emailService;
+    private final BrevoEmailService emailService; // Keep for backward compatibility
+    private final ResilientEmailService resilientEmailService; // New resilient service
+    
+    @Value("${app.super.admin.email}")
+    private String superAdminEmail;
 
     public String approveAdmin(Long userId) {
         Optional<User> userOpt = userRepository.findById(userId);
@@ -41,8 +47,8 @@ public class AdminApprovalService {
 
         userRepository.save(user);
 
-        // Send approval notification to the admin
-        emailService.sendAdminApprovalNotification(
+        // Send approval notification to the admin using resilient service
+        resilientEmailService.sendAdminApprovalNotification(
                 user.getEmail(),
                 user.getUsername(),
                 true,
@@ -94,14 +100,42 @@ public class AdminApprovalService {
             throw new RuntimeException("User is not in pending admin state");
         }
 
-        // Resend the admin registration notification
-        emailService.sendAdminRegistrationNotification(
+        // Resend the admin registration notification using resilient service
+        resilientEmailService.sendAdminRegistrationNotification(
                 user.getUsername(),
                 user.getEmail(),
                 user.getPhone(),
-                userId);
+                userId,
+                superAdminEmail);
 
         logger.info("Resent admin registration notification for user: {} (ID: {})", user.getUsername(), userId);
+    }
+    
+    public String declineAdmin(Long userId, String reason) {
+        Optional<User> userOpt = userRepository.findById(userId);
+
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("User not found with ID: " + userId);
+        }
+
+        User user = userOpt.get();
+
+        if (!"PENDING_ADMIN".equals(user.getRole())) {
+            return "User is not in pending admin state or already processed";
+        }
+
+        // Send decline notification to the admin using resilient service
+        resilientEmailService.sendAdminApprovalNotification(
+                user.getEmail(),
+                user.getUsername(),
+                false,
+                reason);
+
+        // Delete the user after sending notification
+        deleteUser(userId);
+
+        logger.info("Admin declined: {} by Super Admin with reason: {}", user.getUsername(), reason);
+        return "Admin request declined successfully! " + user.getUsername() + " has been notified.";
     }
 
     public String getUserPhoneById(Long userId) {

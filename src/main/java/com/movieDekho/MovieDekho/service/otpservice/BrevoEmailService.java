@@ -105,60 +105,6 @@ public class BrevoEmailService {
         }
     }
 
-    public void sendPasswordResetEmail(String recipientEmail, String otpCode) {
-        try {
-            ApiClient defaultClient = Configuration.getDefaultApiClient();
-            ApiKeyAuth apiKeyAuth = (ApiKeyAuth) defaultClient.getAuthentication("api-key");
-            apiKeyAuth.setApiKey(apiKey);
-
-            defaultClient.setBasePath("https://api.brevo.com/v3");
-
-            TransactionalEmailsApi apiInstance = new TransactionalEmailsApi();
-
-            SendSmtpEmailSender sender = new SendSmtpEmailSender()
-                    .email(senderEmail)
-                    .name(senderName);
-
-            SendSmtpEmailTo to = new SendSmtpEmailTo()
-                    .email(recipientEmail.trim());
-
-            String htmlContent = "<!DOCTYPE html>"
-                    + "<html lang=\"en\">"
-                    + "<head><meta charset=\"UTF-8\"><title>Password Reset</title></head>"
-                    + "<body style=\"font-family: Arial, sans-serif; margin: 20px;\">"
-                    + "<div style=\"max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;\">"
-                    + "<h2 style=\"color: #333; text-align: center;\">Your password reset OTP is </h2>"
-                    + "<div style=\"background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 4px; margin: 20px 0;\">"
-                    + "<h3 style=\"color: #dc3545; font-size: 24px; margin: 0;\">" + otpCode + "</h3>"
-                    + "</div>"
-                    + "<p style=\"color: #666; text-align: center;\">This code is valid for 5 minutes</p>"
-                    + "<p style=\"color: #999; font-size: 12px; text-align: center;\">If you didn't request this code, please ignore this email.</p>"
-                    + "</div>"
-                    + "</body></html>";
-
-            String textContent = "Password Reset Request\n\n"
-                    + "Your password reset OTP: " + otpCode + "\n\n"
-                    + "This code is valid for 5 minutes.\n"
-                    + "If you didn't request this code, please ignore this email.";
-
-            SendSmtpEmail sendSmtpEmail = new SendSmtpEmail()
-                    .sender(sender)
-                    .to(Collections.singletonList(to))
-                    .subject("Password Reset Request")
-                    .htmlContent(htmlContent)
-                    .textContent(textContent)
-                    .tags(Collections.singletonList("password-reset-email"));
-
-            // Actually send the email - this was missing!
-            CreateSmtpEmail result = apiInstance.sendTransacEmail(sendSmtpEmail);
-            logger.info("Password reset email sent successfully to: {}. Message ID: {}", recipientEmail, result.getMessageId());
-
-        } catch (Exception e) {
-            logger.error("Failed to send password reset email to: {}. Error: {}", recipientEmail, e.getMessage(), e);
-            throw new RuntimeException("Failed to send password reset email: " + e.getMessage(), e);
-        }
-    }
-
     public void sendEmail(String recipientEmail, String subject, String htmlContent) {
         try {
             logger.info("Attempting to send email to: {} with subject: {}", recipientEmail, subject);

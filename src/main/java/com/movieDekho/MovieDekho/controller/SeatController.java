@@ -87,10 +87,6 @@ public class SeatController {
         }
     }
 
-// DEPRECATED: Remove this endpoint as functionality is now merged into /slot/{slotId}
-// @GetMapping("/seat-status/{slotId}")
-// public ResponseEntity<?> getSeatStatus(...) { ... }
-
     /**
      * Update seat details (Admin only)
      */

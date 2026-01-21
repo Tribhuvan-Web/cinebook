@@ -6,6 +6,7 @@ import com.movieDekho.MovieDekho.dtos.user.*;
 import com.movieDekho.MovieDekho.exception.UserDetailsAlreadyExist;
 import com.movieDekho.MovieDekho.models.User;
 import com.movieDekho.MovieDekho.repository.UserRepository;
+import com.movieDekho.MovieDekho.service.emailService.ResilientEmailService;
 import com.movieDekho.MovieDekho.service.otpservice.BrevoEmailService;
 import com.movieDekho.MovieDekho.service.otpservice.OtpService;
 import com.movieDekho.MovieDekho.service.userService.UserService;
@@ -43,11 +44,12 @@ public class AuthController {
     private final OtpService otpService;
     private final BrevoEmailService emailService;
     private final UserRepository userRepository;
+    private final ResilientEmailService resilientEmailService;
 
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Creates a new user account with USER role. User will be immediately activated and can start using the application.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "User registration details", required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = RegisterUserDTO.class), examples = @ExampleObject(name = "User Registration Example", value = """
             {
-                "username": "Amit raj",
+                "username": "Amit raj",3
                 "email": "Amitraj@example.com",
                 "password": "SecurePassword123!",
                 "phone": "+911234567890",
@@ -304,7 +306,7 @@ public class AuthController {
             }
 
             String otp = otpService.generatePasswordResetOtp(targetEmail);
-            emailService.sendPasswordResetEmail(targetEmail, otp);
+            resilientEmailService.sendPasswordResetEmail(targetEmail, otp);
 
             return ResponseEntity.ok(Map.of("message", "Password reset OTP sent successfully"));
         } catch (UsernameNotFoundException e) {

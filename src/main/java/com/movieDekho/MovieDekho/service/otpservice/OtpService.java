@@ -1,8 +1,10 @@
 package com.movieDekho.MovieDekho.service.otpservice;
 
+import com.movieDekho.MovieDekho.service.emailService.ResilientEmailService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -12,6 +14,9 @@ public class OtpService {
     private static final Logger logger = LoggerFactory.getLogger(OtpService.class);
     private final ConcurrentHashMap<String, OtpData> otpStorage = new ConcurrentHashMap<>();
     private static final long OTP_VALIDITY_MINUTES = 5;
+    
+    @Autowired
+    private ResilientEmailService resilientEmailService;
     
     // OTP type prefixes to avoid conflicts
     private static final String LOGIN_OTP_PREFIX = "LOGIN:";
@@ -36,6 +41,21 @@ public class OtpService {
         otpStorage.put(key, new OtpData(otp, expirationTime));
         logger.info("Generated {} OTP for email: {} with key: {} and OTP: {}", 
                    type.replace(":", ""), email, key, otp);
+        
+        // Send OTP email using resilient service
+        try {
+            if (PASSWORD_RESET_OTP_PREFIX.equals(type)) {
+                resilientEmailService.sendPasswordResetEmail(email, otp);
+            } else {
+                resilientEmailService.sendOtpEmail(email, otp);
+            }
+        } catch (Exception e) {
+            logger.error("Failed to send OTP email for {}: {}", email, e.getMessage());
+            // Remove OTP from storage if email sending fails
+            otpStorage.remove(key);
+            throw new RuntimeException("Failed to send OTP email: " + e.getMessage());
+        }
+        
         return otp;
     }
 
