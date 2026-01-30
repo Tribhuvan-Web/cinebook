@@ -14,7 +14,6 @@ import com.movieDekho.MovieDekho.exception.ResourceNotFoundException;
 import com.movieDekho.MovieDekho.exception.SeatAlreadySelectedException;
 import com.movieDekho.MovieDekho.models.*;
 import com.movieDekho.MovieDekho.repository.*;
-import com.movieDekho.MovieDekho.service.paymentService.MockPaymentService;
 import com.movieDekho.MovieDekho.service.temporarySeatLockService.TemporarySeatLockService;
 import com.movieDekho.MovieDekho.service.ticketVerificationService.TicketVerificationService;
 import com.movieDekho.MovieDekho.dtos.booking.TicketVerificationDto;
@@ -51,7 +50,6 @@ public class BookingService {
     private final MovieSlotRepository movieSlotRepository;
     private final SeatRepository seatRepository;
     private final TemporarySeatLockRepository temporaryLockRepository;
-    private final MockPaymentService mockPaymentService;
     private final ObjectMapper objectMapper;
     private final TemporarySeatLockService temporarySeatLockService;
     private final TicketVerificationService ticketVerificationService;
@@ -250,30 +248,40 @@ public class BookingService {
         }
     }
 
-    @Transactional(isolation = Isolation.SERIALIZABLE)
-    public BookingResponse createBookingWithRaceConditionHandling(
-            PaymentBookingRequest paymentRequest, String userEmail) {
 
-        log.info("Starting booking creation with race condition handling for user: {} - Seats: {}",
-                userEmail, paymentRequest.getSeatNumbers());
+
+    /**
+     * Create booking after Razorpay payment verification
+     * This method should be called after payment has been verified through /api/payments/verify endpoint
+     * @param razorpayRequest Contains slot, seat numbers, amounts, and Razorpay payment/order details
+     * @param userEmail User email from JWT token
+     * @return BookingResponse with confirmed booking details
+     */
+    @Transactional
+    public BookingResponse createBookingAfterRazorpayPayment(
+            com.movieDekho.MovieDekho.controller.BookingController.RazorpayBookingRequest razorpayRequest, 
+            String userEmail) {
+
+        log.info("Starting booking creation after Razorpay payment for user: {} - Payment: {}",
+                userEmail, razorpayRequest.getPaymentId());
 
         // Validate user
         User user = userRepository.findByEmailOrPhone(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + userEmail));
 
         // Validate movie slot
-        MovieSlot slot = movieSlotRepository.findById(paymentRequest.getSlotId())
+        MovieSlot slot = movieSlotRepository.findById(razorpayRequest.getSlotId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Movie slot not found with ID: " + paymentRequest.getSlotId()));
+                        "Movie slot not found with ID: " + razorpayRequest.getSlotId()));
 
-        // Lock seats
-        List<Seat> seats = seatRepository.findBySlotAndSeatNumbersWithLock(slot, paymentRequest.getSeatNumbers());
+        // Lock seats for pessimistic locking
+        List<Seat> seats = seatRepository.findBySlotAndSeatNumbersWithLock(slot, razorpayRequest.getSeatNumbers());
 
-        if (seats.size() != paymentRequest.getSeatNumbers().size()) {
+        if (seats.size() != razorpayRequest.getSeatNumbers().size()) {
             List<String> foundSeatNumbers = seats.stream()
                     .map(Seat::getSeatNumber)
                     .toList();
-            List<String> missingSeatNumbers = paymentRequest.getSeatNumbers().stream()
+            List<String> missingSeatNumbers = razorpayRequest.getSeatNumbers().stream()
                     .filter(seatNumber -> !foundSeatNumbers.contains(seatNumber))
                     .toList();
             throw new ResourceNotFoundException("Seats not found: " + missingSeatNumbers);
@@ -296,22 +304,9 @@ public class BookingService {
         double taxPrice = basePrice + ((basePrice * 18) / 100);
         double totalAmount = Math.round((taxPrice) * 100.0) / 100.0 + seatAmount;
 
-        if (Math.abs(totalAmount - paymentRequest.getTotalAmount()) > 0.01) {
+        if (Math.abs(totalAmount - razorpayRequest.getTotalAmount()) > 0.01) {
             throw new IllegalArgumentException("Total amount mismatch. Expected: " + totalAmount
-                    + ", Provided: " + paymentRequest.getTotalAmount());
-        }
-
-        // Process payment
-        MockPaymentService.PaymentResponse paymentResponse = mockPaymentService.processPayment(
-                totalAmount,
-                paymentRequest.getPaymentMethod(),
-                paymentRequest.getCardNumber(),
-                paymentRequest.getCardHolderName(),
-                paymentRequest.getExpiryDate(),
-                paymentRequest.getCvv());
-
-        if (!"SUCCESS".equals(paymentResponse.getStatus())) {
-            throw new IllegalArgumentException("Payment failed: " + paymentResponse.getMessage());
+                    + ", Provided: " + razorpayRequest.getTotalAmount());
         }
 
         // Book seats
@@ -320,6 +315,7 @@ public class BookingService {
         }
         seatRepository.saveAll(seats);
 
+        // Create booking with Razorpay payment details
         Booking booking = new Booking();
         booking.setUser(user);
         booking.setSlot(slot);
@@ -329,99 +325,37 @@ public class BookingService {
         booking.setTotalAmount(totalAmount);
         booking.setBookingTime(LocalDateTime.now());
         booking.setStatus(Booking.BookingStatus.CONFIRMED);
-        booking.setPaymentMethod(paymentRequest.getPaymentMethod());
-        booking.setSeatNumbers(paymentRequest.getSeatNumbers());
+        booking.setPaymentMethod("RAZORPAY");
+        booking.setSeatNumbers(razorpayRequest.getSeatNumbers());
         booking.setPaymentStatus("COMPLETED");
-        booking.setPaymentId(paymentResponse.getPaymentId());
+        booking.setPaymentId(razorpayRequest.getPaymentId());
 
+        // Store Razorpay details in payment details JSON
         try {
-            String paymentDetailsJson = objectMapper.writeValueAsString(paymentResponse.getPaymentDetails());
+            Map<String, Object> paymentDetails = new HashMap<>();
+            paymentDetails.put("gateway", "Razorpay");
+            paymentDetails.put("paymentId", razorpayRequest.getPaymentId());
+            paymentDetails.put("orderId", razorpayRequest.getOrderId());
+            paymentDetails.put("paymentMethod", "RAZORPAY");
+            
+            String paymentDetailsJson = objectMapper.writeValueAsString(paymentDetails);
             booking.setPaymentDetails(paymentDetailsJson);
         } catch (Exception e) {
-            log.warn("Failed to serialize payment details: ", e);
+            log.warn("Failed to serialize Razorpay payment details: ", e);
         }
 
-        updateSlotAvailableSeats(slot, paymentRequest.getSeatNumbers().size());
+        updateSlotAvailableSeats(slot, razorpayRequest.getSeatNumbers().size());
         booking = bookingRepository.save(booking);
 
         ticketVerificationService.generateVerificationDataForBooking(booking.getBookingId());
 
-        log.info("Booking created successfully: {} - Seats: {}",
-                booking.getBookingId(), paymentRequest.getSeatNumbers());
+        log.info("Booking created successfully after Razorpay payment: {} - Payment: {} - Seats: {}",
+                booking.getBookingId(), razorpayRequest.getPaymentId(), razorpayRequest.getSeatNumbers());
 
         return convertToBookingResponse(booking);
     }
 
-    @Transactional
-    public BookingResponse createBooking(BookingRequest request, String userEmail) {
-        try {
-            User user = userRepository.findByEmailOrPhone(userEmail)
-                    .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + userEmail));
 
-            MovieSlot slot = movieSlotRepository.findById(request.getSlotId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Movie slot not found with ID: " + request.getSlotId()));
-
-            List<Seat> seats = validateAndGetSeatsBySeatNumbers(request.getSeatNumbers(), slot);
-
-            checkSeatAvailability(seats, slot);
-
-            double seatAmount = seats.stream().mapToDouble(Seat::getPrice).sum();
-            double basePrice = (seatAmount * 7) / 100;
-            double taxPrice = basePrice + ((basePrice * 18) / 100);
-            double totalAmount = Math.round((taxPrice) * 100.0) / 100.0 + seatAmount;
-            if (Math.abs(totalAmount - request.getTotalAmount()) > 0.01) {
-                throw new IllegalArgumentException("Total amount mismatch. Expected: " + totalAmount
-                        + ", Provided: " + request.getTotalAmount());
-            }
-
-            MockPaymentService.PaymentResponse paymentResponse = mockPaymentService.processPayment(
-                    totalAmount,
-                    request.getPaymentMethod(),
-                    request.getCardNumber(),
-                    request.getCardHolderName(),
-                    request.getExpiryDate(),
-                    request.getCvv());
-
-            if (!"SUCCESS".equals(paymentResponse.getStatus())) {
-                throw new IllegalArgumentException("Payment failed: " + paymentResponse.getMessage());
-            }
-
-            Booking booking = new Booking();
-            booking.setUser(user);
-            booking.setSlot(slot);
-            booking.setUserEmail(userEmail);
-            booking.setTicketFee(seatAmount);
-            booking.setConvenienceFee(taxPrice);
-            booking.setTotalAmount(totalAmount);
-            booking.setBookingTime(LocalDateTime.now());
-            booking.setStatus(Booking.BookingStatus.CONFIRMED);
-            booking.setPaymentMethod(request.getPaymentMethod());
-            booking.setSeatNumbers(request.getSeatNumbers());
-            booking.setPaymentStatus("COMPLETED");
-            booking.setPaymentId(paymentResponse.getPaymentId());
-
-            try {
-                String paymentDetailsJson = objectMapper.writeValueAsString(paymentResponse.getPaymentDetails());
-                booking.setPaymentDetails(paymentDetailsJson);
-            } catch (Exception e) {
-                log.warn("Failed to serialize payment details: ", e);
-            }
-
-            markSeatsAsBooked(seats);
-
-            updateSlotAvailableSeats(slot, request.getSeatNumbers().size());
-
-            booking = bookingRepository.save(booking);
-
-            log.info("Booking created and confirmed successfully: {}", booking.getBookingId());
-            return convertToBookingResponse(booking);
-
-        } catch (Exception e) {
-            log.error("Booking creation failed: ", e);
-            throw new RuntimeException("Booking creation failed: " + e.getMessage());
-        }
-    }
 
     @Transactional
     public BookingResponse confirmBooking(Long bookingId) {
@@ -501,29 +435,12 @@ public class BookingService {
             throw new IllegalArgumentException("Booking is already cancelled");
         }
 
-        // Process refund if payment was successful
+        // TODO: Process refund through Razorpay if payment was successful
+        // Use RazorpayPaymentService.refundPayment() with booking.getPaymentId()
         if ("COMPLETED".equals(booking.getPaymentStatus()) && booking.getPaymentId() != null) {
-            try {
-                MockPaymentService.PaymentResponse refundResponse = mockPaymentService.refundPayment(
-                        booking.getPaymentId(),
-                        booking.getTotalAmount());
-                log.info("Refund processed: {}", refundResponse.getPaymentId());
-
-                // Update payment status to indicate refund
-                booking.setPaymentStatus("REFUNDED");
-
-                // Store refund details
-                try {
-                    String refundDetailsJson = objectMapper.writeValueAsString(refundResponse);
-                    booking.setPaymentDetails(booking.getPaymentDetails() + "\n\nREFUND: " + refundDetailsJson);
-                } catch (Exception e) {
-                    log.warn("Failed to serialize refund details: ", e);
-                }
-
-            } catch (Exception e) {
-                log.error("Error processing refund: ", e);
-                // Continue with cancellation even if refund fails
-            }
+            log.warn("Manual refund required for payment ID: {} - Booking ID: {}", 
+                    booking.getPaymentId(), bookingId);
+            // Admin should process refund through Razorpay dashboard or use PaymentController refund endpoint
         }
 
         // Update booking status

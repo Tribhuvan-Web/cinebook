@@ -1,0 +1,2 @@
+link isActive or expired
+link is permanent / temporary

@@ -112,7 +112,6 @@ public class BookingController {
         try {
             if (sessionId == null || sessionId.trim().isEmpty()) {
                 sessionId = temporarySeatLockService.generateSessionId(userIdentifier);
-                log.info("Generated new session ID: {} for user: {}", sessionId, userIdentifier);
             }
 
             SeatSelectionResponse response = bookingService.getSeatsInformation(request, sessionId);
@@ -125,7 +124,6 @@ public class BookingController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Movie slot or seats not found. Please check your selection and try again.");
         } catch (SeatAlreadySelectedException e) {
-            log.warn("Seat selection conflict for session {}: {}", sessionId, e.getConflictingSeats());
 
             SeatConflictResponse conflictResponse = new SeatConflictResponse(
                     e.getUserFriendlyMessage(),
@@ -141,11 +139,9 @@ public class BookingController {
             if (e.getMessage().contains("already selected by other users")) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
             }
-            log.error("Unexpected error during seat selection: ", e);
             return ResponseEntity.badRequest()
                     .body("Unable to select seats. Please try again.");
         } catch (Exception e) {
-            log.error("Error getting seat information: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Service temporarily unavailable. Please try again later.");
         }
@@ -175,35 +171,34 @@ public class BookingController {
         }
     }
 
-    @PostMapping("/payment")
-    @Operation(summary = "Process payment and create booking (Auth Required)", description = "Process payment for selected seats and create booking. This endpoint includes race condition handling with pessimistic locking to ensure seat booking consistency. Frontend should send selected seats data along with payment details.", security = @SecurityRequirement(name = "JWT Authentication"), requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Payment and booking details including selected seats", required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentBookingRequest.class), examples = @ExampleObject(name = "Payment Request Example", value = """
+
+
+    @PostMapping("/razorpay/create-booking")
+    @Operation(summary = "Create booking after Razorpay payment (Auth Required)", description = "Create booking after Razorpay payment verification. Call this endpoint after verifying payment on the /api/payments/verify endpoint.", security = @SecurityRequirement(name = "JWT Authentication"), requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Razorpay booking creation details", required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = RazorpayBookingRequest.class), examples = @ExampleObject(name = "Razorpay Booking Request Example", value = """
             {
                 "slotId": 1,
                 "seatNumbers": ["A1", "A2", "A3"],
                 "totalAmount": 450.00,
-                "paymentMethod": "CARD",
-                "cardNumber": "1234567890123456",
-                "cardHolderName": "John Doe",
-                "expiryDate": "12/25",
-                "cvv": "123"
+                "paymentId": "pay_1234567890",
+                "orderId": "order_1234567890"
             }
             """))))
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Booking created successfully with race condition protection", content = @Content(mediaType = "application/json", schema = @Schema(implementation = BookingResponse.class))),
+            @ApiResponse(responseCode = "201", description = "Booking created successfully after Razorpay payment", content = @Content(mediaType = "application/json", schema = @Schema(implementation = BookingResponse.class))),
             @ApiResponse(responseCode = "401", description = "Invalid or missing authentication token", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "\"Invalid or missing authentication token\""))),
             @ApiResponse(responseCode = "409", description = "Seats no longer available (Race condition handled)", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "\"Seats no longer available: [A1, A2]\""))),
-            @ApiResponse(responseCode = "400", description = "Payment failed or invalid request", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "\"Payment failed: Insufficient funds\"")))
+            @ApiResponse(responseCode = "400", description = "Invalid request or booking creation failed", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "\"Invalid request: Payment details missing\"")))
     })
-    public ResponseEntity<?> createBookingFromSeatSelection(@Valid @RequestBody PaymentBookingRequest request,
-                                                            @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> createBookingAfterRazorpayPayment(
+            @Valid @RequestBody RazorpayBookingRequest request,
+            @RequestHeader("Authorization") String authHeader) {
         try {
             String userEmail = extractUserEmailFromToken(authHeader);
             if (userEmail == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or missing authentication token");
             }
 
-            // Race condition handling happens inside the service method
-            BookingResponse response = bookingService.createBookingWithRaceConditionHandling(request, userEmail);
+            BookingResponse response = bookingService.createBookingAfterRazorpayPayment(request, userEmail);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
         } catch (ResourceNotFoundException e) {
@@ -215,7 +210,7 @@ public class BookingController {
             }
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            log.error("Error creating booking from seat selection: ", e);
+            log.error("Error creating booking after Razorpay payment: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error creating booking: " + e.getMessage());
         }
@@ -281,28 +276,6 @@ public class BookingController {
             log.error("Error generating ticket PDF for booking {}: ", bookingId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error generating ticket PDF. Please try again later.");
-        }
-    }
-
-    @PostMapping
-    public ResponseEntity<?> createBooking(@Valid @RequestBody BookingRequest request,
-                                           @RequestHeader("Authorization") String authHeader) {
-        try {
-            // Extract user email from JWT token
-            String userEmail = extractUserEmailFromToken(authHeader);
-            if (userEmail == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or missing authentication token");
-            }
-            BookingResponse response = bookingService.createBooking(request, userEmail);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            log.error("Error creating booking: ", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error creating booking: " + e.getMessage());
         }
     }
 
@@ -706,4 +679,34 @@ public class BookingController {
                     .body("Error fetching verification summary: " + e.getMessage());
         }
     }
+
+    // ==================== DTO Classes ====================
+
+    /**
+     * DTO for creating booking after Razorpay payment
+     */
+    public static class RazorpayBookingRequest {
+        private Long slotId;
+        private List<String> seatNumbers;
+        private double totalAmount;
+        private String paymentId;      // Razorpay Payment ID
+        private String orderId;        // Razorpay Order ID
+
+        // Getters and Setters
+        public Long getSlotId() { return slotId; }
+        public void setSlotId(Long slotId) { this.slotId = slotId; }
+
+        public List<String> getSeatNumbers() { return seatNumbers; }
+        public void setSeatNumbers(List<String> seatNumbers) { this.seatNumbers = seatNumbers; }
+
+        public double getTotalAmount() { return totalAmount; }
+        public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
+
+        public String getPaymentId() { return paymentId; }
+        public void setPaymentId(String paymentId) { this.paymentId = paymentId; }
+
+        public String getOrderId() { return orderId; }
+        public void setOrderId(String orderId) { this.orderId = orderId; }
+    }
 }
+

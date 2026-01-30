@@ -124,7 +124,6 @@ public class SeatService {
      */
     @Transactional
     public SeatResponse updateSeat(Long seatId, SeatUpdateRequest request) {
-        // O(1) - Single database call
         Seat seat = getSeatById(seatId);
         boolean hasChanges = false;
 
@@ -145,7 +144,6 @@ public class SeatService {
             hasChanges = true;
         }
 
-        // Only save if there are actual changes
         if (hasChanges) {
             seat = seatRepository.save(seat);
         }
@@ -153,33 +151,20 @@ public class SeatService {
         return convertToSeatResponse(seat);
     }
 
-    /**
-     * OPTIMIZED: Delete seat with batch slot update
-     * Time Complexity: O(1)
-     * Database Calls: 3 (get seat + delete + slot update)
-     */
     @Transactional
     public void deleteSeat(Long seatId) {
-        // O(1) - Single database call
         Seat seat = getSeatById(seatId);
         MovieSlot slot = seat.getSlot();
         boolean wasAvailable = !seat.isBooked();
 
-        // O(1) - Delete operation
         seatRepository.delete(seat);
 
-        // O(1) - Update slot totals in single operation
         int totalSeatsChange = -1;
         int availableSeatsChange = wasAvailable ? -1 : 0;
         updateSlotTotals(slot, totalSeatsChange, availableSeatsChange);
         
-        log.info("Deleted seat {} from slot {}", seatId, slot.getSlotId());
     }
 
-    /**
-     * OPTIMIZED: Bulk delete seats
-     * Time Complexity: O(1) for database operations
-     */
     @Transactional
     public void deleteSeats(List<Long> seatIds) {
         if (seatIds == null || seatIds.isEmpty()) {
