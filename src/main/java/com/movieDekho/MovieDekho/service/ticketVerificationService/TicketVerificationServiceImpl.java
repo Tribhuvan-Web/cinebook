@@ -44,8 +44,30 @@ public class TicketVerificationServiceImpl implements TicketVerificationService 
 
     @Override
     public String generateQRCode(String verificationToken, String randomString) {
+        // Validate inputs
+        if (verificationToken == null || verificationToken.trim().isEmpty()) {
+            throw new IllegalArgumentException("Verification token cannot be null or empty");
+        }
+        if (randomString == null || randomString.trim().isEmpty()) {
+            throw new IllegalArgumentException("Random string cannot be null or empty");
+        }
+        
         // Combine token and random string with a separator
-        return verificationToken + ":" + randomString;
+        String qrData = verificationToken + ":" + randomString;
+        
+        // QR codes have data limits - ensure we don't exceed them
+        // Alphanumeric mode can handle up to 4,296 characters
+        // But for better compatibility, limit to 2,953 characters
+        if (qrData.length() > 2950) {
+            log.warn("QR code data too long: {} characters, truncating", qrData.length());
+            // Use shorter format: first 20 chars of token + : + random string
+            String shortToken = verificationToken.length() > 20 ? 
+                verificationToken.substring(0, 20) : verificationToken;
+            qrData = shortToken + ":" + randomString;
+        }
+        
+        log.debug("Generated QR code data with length: {}", qrData.length());
+        return qrData;
     }
 
     @Override

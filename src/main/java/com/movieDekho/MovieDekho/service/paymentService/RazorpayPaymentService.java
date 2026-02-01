@@ -29,6 +29,22 @@ public class RazorpayPaymentService {
 
     private RazorpayClient getClient() throws RazorpayException {
         if (razorpayClient == null) {
+            // Check if we're in test mode
+            boolean isTestMode = razorpayKeyId != null && razorpayKeyId.startsWith("rzp_test_");
+            boolean isLiveMode = razorpayKeyId != null && razorpayKeyId.startsWith("rzp_live_");
+            
+            if (isTestMode) {
+                log.warn("🧪 RAZORPAY TEST MODE ACTIVE - No real money will be charged!");
+                log.info("Using test key: {}***", razorpayKeyId.substring(0, 12));
+            } else if (isLiveMode) {
+                log.error("💰 RAZORPAY LIVE MODE ACTIVE - REAL MONEY WILL BE CHARGED!");
+                log.warn("Using live key: {}*** - ENSURE THIS IS INTENDED FOR PRODUCTION!", 
+                    razorpayKeyId.substring(0, 12));
+            } else {
+                log.warn("⚠️ Unknown Razorpay key format: {}. Please verify your configuration.", 
+                    razorpayKeyId != null ? razorpayKeyId.substring(0, Math.min(8, razorpayKeyId.length())) : "null");
+            }
+            
             razorpayClient = new RazorpayClient(razorpayKeyId, razorpayKeySecret);
         }
         return razorpayClient;

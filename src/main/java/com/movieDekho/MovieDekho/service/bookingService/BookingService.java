@@ -739,16 +739,33 @@ public class BookingService {
 
         // QR Code generation
         try {
-            String qrCodeData = booking.getQrCode() != null ? booking.getQrCode() : "No QR Code";
+            String qrCodeData = booking.getQrCode();
+            
+            if (qrCodeData == null || qrCodeData.trim().isEmpty()) {
+                log.warn("QR code data is null or empty for booking: {}", booking.getBookingId());
+                qrCodeData = "BOOKING:" + booking.getBookingId();
+            }
+            
+            // Validate QR code data length
+            if (qrCodeData.length() > 2950) {
+                log.warn("QR code data too long ({} chars), truncating for booking: {}", 
+                    qrCodeData.length(), booking.getBookingId());
+                qrCodeData = qrCodeData.substring(0, 2950);
+            }
+            
+            log.debug("Generating QR code for booking {} with data length: {}", 
+                booking.getBookingId(), qrCodeData.length());
+            
             QRCodeWriter qrCodeWriter = new QRCodeWriter();
-            var bitMatrix = qrCodeWriter.encode(qrCodeData, BarcodeFormat.QR_CODE, 100, 100);
+            // Use larger size for better readability and error correction
+            var bitMatrix = qrCodeWriter.encode(qrCodeData, BarcodeFormat.QR_CODE, 150, 150);
 
             ByteArrayOutputStream qrBaos = new ByteArrayOutputStream();
             MatrixToImageWriter.writeToStream(bitMatrix, "PNG", qrBaos);
 
             Image qrImage = Image.getInstance(qrBaos.toByteArray());
             qrImage.setAlignment(Element.ALIGN_CENTER);
-            qrImage.scaleToFit(100, 100);
+            qrImage.scaleToFit(120, 120);
 
             Paragraph qrTitle = new Paragraph("SCAN TO ENTER", qrFont);
             qrTitle.setAlignment(Element.ALIGN_CENTER);
@@ -756,8 +773,12 @@ public class BookingService {
             rightCell.addElement(qrTitle);
 
             rightCell.addElement(qrImage);
+            
+            log.info("Successfully generated QR code for booking: {}", booking.getBookingId());
 
         } catch (Exception e) {
+            log.error("Failed to generate QR code for booking {}: {}", 
+                booking.getBookingId(), e.getMessage(), e);
             Paragraph qrError = new Paragraph("QR Code\nUnavailable", qrFont);
             qrError.setAlignment(Element.ALIGN_CENTER);
             rightCell.addElement(qrError);

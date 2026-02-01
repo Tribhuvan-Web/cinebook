@@ -21,22 +21,16 @@ public class EmailProcessorService {
     private final BrevoEmailService brevoEmailService;
     private final EmailQueueConfig emailQueueConfig;
     
-    // Thread pool for async email processing
     private final ExecutorService executorService = Executors.newFixedThreadPool(5);
 
-    /**
-     * Process emails from the queue
-     */
     public void processEmailQueue() {
         if (!emailQueueConfig.isEnabled()) {
             return;
         }
 
         try {
-            // Reset any stuck emails first
             emailQueueService.resetStuckEmails();
             
-            // Get emails ready to send
             List<EmailQueue> emailsToSend = emailQueueService.getEmailsReadyToSend();
             
             if (emailsToSend.isEmpty()) {

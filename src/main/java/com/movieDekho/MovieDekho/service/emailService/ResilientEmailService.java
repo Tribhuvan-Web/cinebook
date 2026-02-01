@@ -8,10 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
-/**
- * Enhanced Email Service with DB-backed queue support
- * This service provides resilient email sending with automatic retry mechanism
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j

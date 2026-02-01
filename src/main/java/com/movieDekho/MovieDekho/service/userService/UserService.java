@@ -8,7 +8,6 @@ import com.movieDekho.MovieDekho.exception.UserDetailsAlreadyExist;
 import com.movieDekho.MovieDekho.models.User;
 import com.movieDekho.MovieDekho.repository.UserRepository;
 import com.movieDekho.MovieDekho.service.emailService.ResilientEmailService;
-import com.movieDekho.MovieDekho.service.otpservice.BrevoEmailService;
 import jakarta.transaction.Transactional;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -31,8 +30,7 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
     private UserRepository userRepository;
     private AuthenticationManager authenticationManager;
-    private BrevoEmailService brevoEmailService; // Keep for backward compatibility
-    private ResilientEmailService resilientEmailService; // New resilient service
+    private ResilientEmailService resilientEmailService; 
     private JwtUtils jwtUtils;
     private UserDetailsServiceImpl userDetailsService;
 
@@ -57,17 +55,12 @@ public class UserService {
         
         if ("ROLE_USER".equals(user.getRole()) || 
             ("ROLE_ADMIN".equals(user.getRole()) && user.getIsApproved())) {
-            // Resilient email service that handles queue fallback
             resilientEmailService.sendWelcomeEmail(savedUser);
         }
         
         return savedUser;
     }
 
-    /**
-     * @deprecated Use ResilientEmailService.sendWelcomeEmail() instead
-     * This method is kept for backward compatibility but now uses the resilient service
-     */
     @Deprecated
     public void sendWelcomeEmail(User user) {
         resilientEmailService.sendWelcomeEmail(user);
