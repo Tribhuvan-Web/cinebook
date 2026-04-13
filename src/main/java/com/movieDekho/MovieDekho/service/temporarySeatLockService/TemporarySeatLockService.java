@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 public class TemporarySeatLockService {
 
     private final TemporarySeatLockRepository temporaryLockRepository;
-    private static final int LOCK_DURATION_MINUTES = 3;
+    private static final int LOCK_DURATION_MINUTES = 10;
 
     @Transactional
     public List<String> lockSeats(List<Seat> seats, String sessionId) {

@@ -2,11 +2,10 @@ package com.movieDekho.MovieDekho.service.paymentService;
 
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
-
+import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,29 +26,28 @@ public class RazorpayPaymentService {
 
     private RazorpayClient razorpayClient;
 
-    private RazorpayClient getClient() throws RazorpayException {
-        if (razorpayClient == null) {
-            // Check if we're in test mode
+    @PostConstruct
+    public void init() {
+        try {
+            this.razorpayClient = new RazorpayClient(razorpayKeyId, razorpayKeySecret);
+            log.info("RazorpayClient initialized successfully.");
             boolean isTestMode = razorpayKeyId != null && razorpayKeyId.startsWith("rzp_test_");
-            boolean isLiveMode = razorpayKeyId != null && razorpayKeyId.startsWith("rzp_live_");
-            
             if (isTestMode) {
                 log.warn("🧪 RAZORPAY TEST MODE ACTIVE - No real money will be charged!");
                 log.info("Using test key: {}***", razorpayKeyId.substring(0, 12));
-            } else if (isLiveMode) {
-                log.error("💰 RAZORPAY LIVE MODE ACTIVE - REAL MONEY WILL BE CHARGED!");
-                log.warn("Using live key: {}*** - ENSURE THIS IS INTENDED FOR PRODUCTION!", 
-                    razorpayKeyId.substring(0, 12));
             } else {
-                log.warn("⚠️ Unknown Razorpay key format: {}. Please verify your configuration.", 
-                    razorpayKeyId != null ? razorpayKeyId.substring(0, Math.min(8, razorpayKeyId.length())) : "null");
+                log.error("💰 RAZORPAY LIVE MODE ACTIVE - REAL MONEY WILL BE CHARGED!");
+                log.warn("Using live key: {}*** - ENSURE THIS IS INTENDED FOR PRODUCTION!",
+                        razorpayKeyId.substring(0, 12));
             }
-            
-            razorpayClient = new RazorpayClient(razorpayKeyId, razorpayKeySecret);
+        } catch (RazorpayException e) {
+            log.error("Failed to initialize RazorpayClient", e);
+            // Depending on the application's requirements, you might want to
+            // prevent the application from starting if the payment client fails to initialize.
+            // For now, we'll log the error and let the application start.
+            // throw new RuntimeException("Failed to initialize Razorpay client", e);
         }
-        return razorpayClient;
     }
-
     public RazorpayOrderResponse createOrder(double amount, String orderId,
             String customerEmail, String customerPhone) {
         try {
@@ -76,7 +74,7 @@ public class RazorpayPaymentService {
             notes.put("service", "MovieDekho");
             orderRequest.put("notes", notes);
 
-            com.razorpay.Order order = getClient().orders.create(orderRequest);
+            com.razorpay.Order order = razorpayClient.orders.create(orderRequest);
             JSONObject orderJson = order.toJson();
 
             RazorpayOrderResponse response = new RazorpayOrderResponse();
@@ -140,7 +138,7 @@ public class RazorpayPaymentService {
         try {
             log.info("Fetching payment details for paymentId: {}", paymentId);
 
-            com.razorpay.Payment payment = getClient().payments.fetch(paymentId);
+            com.razorpay.Payment payment = razorpayClient.payments.fetch(paymentId);
             JSONObject paymentJson = payment.toJson();
 
             PaymentDetailsResponse response = new PaymentDetailsResponse();
@@ -173,7 +171,7 @@ public class RazorpayPaymentService {
             JSONObject refundRequest = new JSONObject();
             refundRequest.put("amount", (long) (refundAmount * 100));
 
-            com.razorpay.Refund refund = getClient().payments.refund(paymentId, refundRequest);
+            com.razorpay.Refund refund = razorpayClient.payments.refund(paymentId, refundRequest);
             JSONObject refundJson = refund.toJson();
 
             RefundResponse response = new RefundResponse();
